@@ -1,19 +1,15 @@
-# Một Working Project, nhiều lần Update
+# Cập nhật trong cùng Working Project
 
-1. Connect đúng 2021.2; chạy COM Compatibility Test lần đầu.
-2. Chọn đường dẫn mới ngoài reference. Create Working Copy hoặc Build From Scratch. Hai mode được ghi riêng trong trạng thái/log.
-3. Validate Geometry trên mô hình hiện tại để có LastValid. Đường dẫn Project và Design được kiểm tra qua COM trước mỗi thao tác ghi.
-4. Nhập số trong GUI; Calculate/Apply Changes chỉ tính draft và preview, chưa sửa HFSS.
-5. Update Geometry gọi một ChangeProperty chứa 19 independent variables. Không NewProject, InsertDesign, SaveAs hoặc Analyze trong Update.
-6. Đọc lại 19 số và 12 expressions, inventory, flare void/metal/thickness, cavity, coax, ports, bounds và ValidateDesign. Chỉ PASS nếu các assertions thực chạy đạt.
-7. Khi lỗi, thử ghi lại bộ biến trước và validate rollback. Update vẫn báo thất bại dù rollback thành công. Rollback thất bại khóa Save/Update cho tới restore/reload và validate.
-8. Save chỉ khi healthy và validate lại. Save As New Version là thao tác chủ động tạo AEDT mới; sau đó các lần update/save tiếp tục dùng phiên bản vừa chọn.
-9. Reload Last Saved Version có xác nhận bỏ thay đổi chưa lưu, đóng đúng working project rồi mở lại. Không mở/đóng file tham chiếu. Nếu build chưa Save, file recovery chỉ là project shell trống; cần build lại vào đường dẫn mới hoặc kiểm tra project chưa lưu trong HFSS.
+**Dựng mới:** hfssNewProject → hfssInsertDesign → SaveAs shell rỗng để định danh → variables/CAD/ports/solver → runtime probes. Geometry chỉ được lưu khi người dùng chọn Lưu dự án. Nếu build lỗi, shell trên đĩa vẫn rỗng; CAD hỏng đang ở bộ nhớ không tự save.
 
-COM không có transaction nguyên tử. Một call có thể thay đổi vài biến rồi lỗi; vì vậy rollback thử cả bộ và kiểm tra lại. Không tự Save mô hình hỏng. LastValid và Dirty trong ứng dụng chỉ theo dõi những lần kiểm tra của phiên hiện tại, không suy đoán trạng thái chỉnh tay trong HFSS. Trước Update, verify baseline phát hiện biến bị sửa bên ngoài; hãy Validate lại trước khi áp dụng draft. Các sửa CAD bằng tay không thay biến có thể chỉ được phát hiện bởi topology checks.
+**Bản sao từ nguồn:** tạo file làm việc riêng, chỉ chuẩn hóa Move Y của cable_mid_1 từ literal 2mm thành thickness trên bản sao. Không sửa AEDT gốc. Đây là copy CAD, không phải scratch build. Mở dự án phải đọc và validate bộ biến trong bản lưu.
 
-Nếu Working Project cũ chứa Move middle cutter cứng 2mm, cập nhật thickness bị chặn. Create Working Copy của bản này chuẩn hóa đúng literal trên bản sao và ghi thông báo log; scratch builder dùng thickness ngay từ đầu. Không tự chỉnh các history khác.
+**Mở/Update:** hfssOpenProject chỉ gọi OpenProject nếu tên chưa mở; cùng tên nhưng khác đường dẫn bị chặn. hfssSetDesign chọn đúng design DrivenModal. Script update không chứa NewProject/InsertDesign/Save/Analyze. hfssVariableChange chỉ được gọi cho biến khác LastValid, giữ %.17g. Các công thức dẫn xuất và history CAD chịu trách nhiệm tái tính.
 
-Kết quả bị đánh dấu `RESULTS OUTDATED — RE-SIMULATION REQUIRED` trước lần mutation đầu, kể cả update/solver-setting thất bại và đã rollback. Không phục hồi cờ simulated chỉ vì tham số quay về giá trị cũ.
+Trước mutation, verify 19 literal + 12 derived expressions so với baseline đã xác nhận. Sau mutation đo flare rỗng/metal, BothSides, cavity, coax, port, inventory và ValidateDesign. Nếu lỗi, RestorePrevious ghi lại những biến đã đổi và chạy lại các kiểm tra. Update vẫn thất bại dù rollback đạt. Rollback thất bại không đánh dấu healthy, không cho Save/Update mới trước khi phục hồi/validate.
 
-Monitor không ping trong lúc COM đang busy. Reconnect không tự đóng project đang mở. Sau Reconnect chọn Open Working Project để bind handles, kiểm tra cùng đường dẫn và validate. Phần mềm không tự kết nối một design tên HFSSDesign1.
+Save thường dùng oProject.Save vì helper hfssSaveProject luôn là SaveAs. Menu Lưu thành phiên bản mới gọi helper với đích mới không tồn tại. Sau Save, MATLAB đọc lại file để kiểm tra variables/ports/radiation/NoArray. Mở lại bản lưu có xác nhận bỏ thay đổi chưa lưu, CloseProject đúng Working Project, rồi mở lại. Không đóng/mở project cho mỗi update thông thường.
+
+Kết quả được làm stale trước update/restore/solve, kể cả khi update sau đó rollback. Validate không đổi hình học giữ kết quả hiện tại nếu baseline không đổi. Sửa CAD bằng tay ngoài ứng dụng chỉ có thể được phát hiện trong phạm vi probes; unsaved flag theo dõi ứng dụng, không phải tất cả chỉnh sửa ngoài HFSS.
+
+Không còn COM handles persistent trong MATLAB. Mỗi script ràng buộc lại Desktop/project/design qua thư viện và kiểm tra đường dẫn. Trạng thái kết nối trên GUI là lần phản hồi gần nhất, không phải heartbeat liên tục. Launcher bất đồng bộ; timeout giữ job chưa kết thúc để tránh hai script ghi cùng project. Kiểm tra lại trạng thái trong menu Nâng cao.

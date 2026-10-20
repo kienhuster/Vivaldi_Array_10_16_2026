@@ -1,13 +1,11 @@
-# Cài đặt trên Windows
+# Chuẩn bị Windows
 
-Yêu cầu Windows 10/11 64-bit, MATLAB R2021a+ có MATLAB desktop và COM Automation, HFSS/Ansys Electronics Desktop 2021 R2 đã cài và đăng ký COM, license phù hợp khi giải. Không cần toolbox RF/Antenna, Python hoặc PyAEDT. Tính toán dùng base MATLAB, `fzero`, `polyshape`; GUI dùng `uifigure`.
+Windows 10/11, MATLAB R2021a+ có desktop/JVM, Ansys Electronics Desktop/HFSS 2021 R2 đã đăng ký scripting Automation và license khi giải. Không cần RF/Antenna toolbox, Parallel Computing Toolbox, Python hoặc PyAEDT. Thư viện GPL đi kèm toàn bộ source.
 
-Giải nén ZIP vào đường dẫn có quyền ghi. Tránh chạy trực tiếp trong ZIP hoặc `Program Files`. Giữ nguyên các thư mục con. Tệp chính kiểm tra phiên bản MATLAB trước khi tạo GUI. Mã UTF-8 có hướng dẫn tiếng Việt.
+Giải nén repository vào thư mục có quyền ghi; đặt Current Folder vào `Vivaldi_DualPol_Live_API_FINAL`; chạy `Vivaldi_DualPol_Live_API`. Không chạy từng module thủ công. `work/` được tạo lúc chạy, không commit scripts/status/results này.
 
-Đường dẫn HFSS ví dụ `D:\Program Files\AnsysEM\AnsysEM21.2\Win64\ansysedt.exe` chỉ để nhận diện bản cài. COM không cần truyền đường dẫn executable và không dùng `/RunScript`. Nút Detect truy vấn registry ProgID; ô ProgID cho phép nhập đăng ký thực tế của máy.
+Trong menu Nâng cao chọn `ansysedt.exe`. Dò tự động hỗ trợ ANSYSEM_ROOT212/ANSYSEM_ROOT và các vị trí Program Files phổ biến ở C/D; không hard-code duy nhất ổ D. Launcher chạy nền truyền argument riêng nên khoảng trắng không cần escape shell. Unicode và nhiều phiên AEDT vẫn cần test trên máy đích. Không tự xóa lock hoặc kill HFSS.
 
-Mở AEDT 2021 R2 bằng tay nếu muốn attach phiên đang chạy. Chạy MATLAB và AEDT cùng mức quyền Windows để tránh lỗi access denied. Chọn Connect. Phiên generic ProgID phải trả phiên bản bắt đầu `2021.2`; phiên khác bị từ chối.
+Chạy kiểm tra tương thích trước: tạo Box liên kết biến, đổi biến qua helper, sheet có vùng rỗng, BothSides và đọc lại kích thước. Nếu API point-query trên sheet không hỗ trợ, test và builder dừng; không tiếp tục tạo tấm đặc rồi báo đạt. Mã nguồn có đầy đủ tests nhưng cloud Linux không thể chạy MATLAB desktop/HFSS.
 
-Đường dẫn được truyền bằng COM arguments và Java canonical File, không ghép shell command nên khoảng trắng không cần escape. Unicode còn cần kiểm thử trên bản cài HFSS thực tế; nếu AEDT từ chối tên Unicode, thử đường dẫn ASCII trên ổ cục bộ và gửi log. Tránh thư mục đồng bộ/ổ mạng trong lần test đầu.
-
-Bấm COM Compatibility Test trước khi dựng anten. Nếu lỗi SAFEARRAY, giữ report FAIL và gửi log; chương trình không tự chuyển sang script. Có thể tiếp tục dùng tính toán và preview offline.
+ProgID 2021.2 được yêu cầu trong script. Nếu class not registered, kiểm tra cài đặt Ansys và cùng mức quyền MATLAB/AEDT. Ứng dụng không tự sửa registry hoặc dùng một phiên bản HFSS khác rồi báo 2021 R2.

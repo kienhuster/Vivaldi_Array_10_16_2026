@@ -21,6 +21,8 @@ __pycache__/
 # Live API runtime output (release verification reports remain tracked)
 /Vivaldi_DualPol_Live_API_FINAL/work/
 /Vivaldi_DualPol_Live_API_FINAL/logs/
+/Vivaldi_DualPol_Live_API_FINAL.zip
+/Vivaldi_DualPol_Live_API_FINAL_ZIP_INTEGRITY.json
 
 # Local credentials and operating-system files
 .env

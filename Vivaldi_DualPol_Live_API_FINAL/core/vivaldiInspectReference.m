@@ -1,5 +1,5 @@
 function info = vivaldiInspectReference(file, designName)
-    % VIVALDIBUILDERINSPECT Read one named text AEDT design without changing it.
+    % Mục đích: đọc đúng design trong AEDT dạng văn bản, không thay đổi file nguồn.
     if nargin < 2
         designName = 'dual_pol_vivaldi_patch_Wflare_20';
     end
@@ -23,7 +23,7 @@ function info = vivaldiInspectReference(file, designName)
         e = regexp(line, '^\$end ''([^'']+)''$', 'tokens', 'once');
         if ~isempty(e)
             assert(~isempty(stack) && strcmp(stack{end}, e{1}), ...
-                   'VivaldiBuilder:AEDTFormat', 'Unbalanced AEDT section at line %d.', k);
+                   'VivaldiBuilder:AEDTFormat', 'Cấu trúc AEDT không cân bằng tại dòng %d.', k);
             if strcmp(e{1}, 'HFSSModel')
                 if selected
                     info.sourceText = strjoin(lines(first:k), newline);
@@ -40,7 +40,7 @@ function info = vivaldiInspectReference(file, designName)
         if strcmp(stack{end}, 'HFSSModel') && ~isempty(name)
             selected = strcmp(name{1}, designName);
             if selected
-                assert(~found, 'VivaldiBuilder:DuplicateDesign', 'Design name is ambiguous.');
+                assert(~found, 'VivaldiBuilder:DuplicateDesign', 'Tên design không duy nhất.');
                 found = true;
                 first = k;
             end
@@ -76,6 +76,6 @@ function info = vivaldiInspectReference(file, designName)
             info.solutionType = s{1};
         end
     end
-    assert(isempty(stack), 'VivaldiBuilder:AEDTFormat', 'Unclosed AEDT sections.');
-    assert(found, 'VivaldiBuilder:MissingDesign', 'Named HFSS design was not found.');
+    assert(isempty(stack), 'VivaldiBuilder:AEDTFormat', 'Cấu trúc AEDT có khối chưa đóng.');
+    assert(found, 'VivaldiBuilder:MissingDesign', 'Không tìm thấy HFSS design đúng tên.');
 end

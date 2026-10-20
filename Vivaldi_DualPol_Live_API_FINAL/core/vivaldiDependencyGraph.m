@@ -1,5 +1,5 @@
 function graph = vivaldiDependencyGraph(p)
-    % Explicit acyclic expression graph, plus CAD dependents (no eval).
+    % Mục đích: mô tả quan hệ phụ thuộc biểu thức và CAD, không chạy eval.
     if nargin < 1
         p = vivaldiDefaultParams();
     end

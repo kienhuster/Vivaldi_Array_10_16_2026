@@ -1,7 +1,6 @@
 function [handles, info] = vivaldiPreview3D(ax, p, g, options)
-    % VIVALDIBUILDERPREVIEW Sampled mathematical preview; never a CAD validation.
-    % Slots use the same rotated transition and three rectangles as the builder.
-    % Curves are tessellated and polyshape Booleans approximate the HFSS surfaces.
+    % Mục đích: xem trước hai tấm từ công thức, transition, khe, cavity và coax.
+    % Dùng polyshape lấy mẫu và phép trừ 2D; không thay thế CAD HFSS đã kiểm chứng.
     if nargin < 3 || isempty(g)
         g = vivaldiCalculateGeometry(p);
     end
@@ -13,9 +12,9 @@ function [handles, info] = vivaldiPreview3D(ax, p, g, options)
     cla(ax);
     hold(ax, 'on');
     handles = gobjects(0);
-    info = struct('kind', 'Mathematical preview', 'cadValidated', false, ...
-                  'description', ['Sampled mathematical preview: rotated transition, slot and cavity; ' ...
-                                'not an HFSS CAD export or a Boolean/contact validation.']);
+    info = struct('kind', 'Xem trước theo công thức', 'cadValidated', false, ...
+                  'description', ['Xem trước lấy mẫu: đoạn chuyển tiếp xoay, khe và cavity; ' ...
+                                  'không phải CAD xuất từ HFSS hoặc kiểm chứng Boolean/tiếp xúc.']);
     corners = g.plates(1).corners;
     metal = polyshape(corners(:, 1), corners(:, 3), 'Simplify', true);
     if isfield(g, 'mainFlare')
@@ -57,7 +56,7 @@ function [handles, info] = vivaldiPreview3D(ax, p, g, options)
             plot3(ax, [port.start(1) port.end(1)], [port.start(2) port.end(2)], ...
                   [port.start(3) port.end(3)], 'm-', 'LineWidth', 2);
             text(ax, port.center(1), port.center(2), port.center(3) - .7, ...
-                 sprintf('Port %d', k), 'Color', [.6 0 .6], 'FontSize', 9);
+                 sprintf('Cổng %d', k), 'Color', [.6 0 .6], 'FontSize', 9);
         end
     end
     if options.coordinates
@@ -101,8 +100,8 @@ function [handles, info] = vivaldiPreview3D(ax, p, g, options)
         otherwise
             view(ax, 38, 25);
     end
-    title(ax, {'MATHEMATICAL PREVIEW — NOT HFSS CAD', ...
-               sprintf('One dual-pol element | L_{patch}=%.6f mm', g.L_patch)}, 'FontSize', 11);
+    title(ax, {'XEM TRƯỚC THEO CÔNG THỨC — CHƯA KIỂM CHỨNG CAD HFSS', ...
+               sprintf('Một phần tử hai phân cực | L_{patch}=%.6f mm', g.L_patch)}, 'FontSize', 11);
     hold(ax, 'off');
 
     function h = slab(shape, thickness, polarization)

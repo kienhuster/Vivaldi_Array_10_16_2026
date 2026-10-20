@@ -1,44 +1,47 @@
-# Vivaldi Dual-Polarized Antenna — Live HFSS Designer Pro
+# Vivaldi hai phân cực — bản refactor dùng hfss-api
 
-Ứng dụng MATLAB điều khiển HFSS 2021 R2 bằng **COM trực tiếp, giữ session và Working Project**. Mã được bàn giao dưới dạng ZIP, trong thư mục riêng. Không cần Python, PyAEDT hoặc thư viện hfss-api để chạy.
+Ứng dụng hiện tại được tinh gọn trên cùng entry point `Vivaldi_DualPol_Live_API`, dùng **MATLAB → helper thật của yuip/hfss-api → VBScript → HFSS 2021 R2**. MATLAB không giữ persistent COM handles. Update thay các biến cần thiết trong cùng Working Project, không tạo project/design mới và không tự chạy solver.
 
-**Mức kiểm chứng của bản bàn giao:** đã viết mã và kiểm tra trên Linux; MATLAB desktop, nested SAFEARRAY trên MATLAB COM, CAD HFSS và solver thực tế còn **PENDING — requires Windows MATLAB + HFSS**. Không coi kiểm thử protocol bằng mock là kiểm chứng HFSS. Đọc `docs/VALIDATION_REPORT.md` và `docs/KNOWN_LIMITATIONS.md` trước khi dùng.
+**Mức bằng chứng:** đã viết và chạy các kiểm tra khả dụng trên Linux; MATLAB desktop/GUI và HFSS CAD/solver thực tế vẫn **PENDING**. Không coi script sinh thành công hoặc launcher trả 0 là CAD đã đúng. Xem `docs/VALIDATION_REPORT.md`.
 
-## Chạy ứng dụng
+## Chạy trong MATLAB
 
-1. Giải nén toàn bộ ZIP vào thư mục có quyền ghi trên Windows, ví dụ `D:\AntennaTools\Vivaldi_DualPol_Live_API_FINAL`.
-2. Dùng MATLAB R2021a trở lên, đặt **Current Folder** vào thư mục vừa giải nén.
-3. Chạy một lệnh:
+Tải ZIP của nhánh/PR từ GitHub bằng **Code → Download ZIP**. Giải nén toàn bộ repository, đặt Current Folder vào thư mục `Vivaldi_DualPol_Live_API_FINAL`, chạy trên MATLAB R2021a+:
 
 ```matlab
 Vivaldi_DualPol_Live_API
 ```
 
-Ứng dụng tự thêm `core`, `com`, `results`; không cần chạy các module thủ công. Khi chưa kết nối HFSS vẫn chỉnh số, tính L_patch, giải Target Length và xem preview được.
+Ứng dụng tự gọi `hfssIncludePaths([apiRoot filesep])`; thư viện và giấy phép đã đi kèm trong `third_party/hfss-api`, không cần tải thêm Python hoặc PyAEDT. Các tên hàm/biến được giữ bằng tiếng Anh để tương thích AEDT; nội dung giao diện và chú thích lớn bằng tiếng Việt.
 
-## Lần chạy đầu trên Windows
+## Luồng sử dụng
 
-Trong tab LIVE HFSS CONNECTION, chạy **COM Compatibility Test** trước. Bài test tạo project riêng, kiểm tra nested cell/VARIANT, Box liên kết biến, vùng rỗng trên sheet, Thicken BothSides và Save/Close. Chỉ coi kết nối cơ bản đã xác nhận nếu báo cáo JSON mới có PASS. Kiểm chứng anten hoàn chỉnh là bước riêng.
+1. Trong **Nâng cao → HFSS và kiểm tra**, chọn `ansysedt.exe`; đường dẫn có khoảng trắng được truyền bằng các argument riêng, không ghép shell khi chạy nền.
+2. Chạy **Kiểm tra tương thích HFSS API** lần đầu trên Windows. Bài test tạo project thử riêng, gọi helper thật, đổi biến liên kết Box, kiểm tra sheet có lỗ và BothSides. Chỉ PASS nếu HFSS trả đúng kết quả đo.
+3. Chọn đường dẫn Working Project. **Dựng anten mới** tạo từ design trống. Hoặc **Nâng cao → Dự án và tham số → Tạo bản làm việc từ nguồn** tạo bản sao CAD đã chuẩn hóa literal Move; hai chế độ được phân biệt rõ, không gọi bản sao là dựng mới.
+4. Nhập số thực; kết quả dẫn xuất và xem trước tự cập nhật. **Cập nhật HFSS/Cập nhật mô hình** sinh script ngắn, chỉ đổi những biến thay đổi, đọc lại và đo CAD. Nếu lỗi, thử rollback và kiểm tra lại; không tự lưu mô hình lỗi.
+5. **Lưu dự án** lưu file hiện tại. Save As, mở lại bản lưu, khôi phục biến, cấu hình JSON và debug từng bước nằm trong menu Nâng cao.
+6. Chỉ **Chạy mô phỏng** mới gọi Analyze Setup1. Xuất/nhập CSV thật trong menu Nâng cao, chọn S11/S21/VSWR/Gain/giản đồ bằng một dropdown.
 
-Hai lựa chọn tiếp theo:
+Ngoài Windows, chế độ **Chỉ tạo kịch bản, chưa chạy HFSS** tự bật. Có thể dùng tính toán, preview và xem VBS sinh ra ở `work/`, nhưng không được coi đó là kết quả build/update/solve. Script, status UTF16, danh sách helper thực đã gọi và thông số job được lưu cạnh nhau để chẩn đoán.
 
-- **Create Working Copy:** sao chép AEDT tham chiếu sang đường dẫn Working Project mới, chuẩn hóa riêng Move Y của `cable_mid_1` từ `2mm` thành `thickness`, rồi mở/validate. Đây là bản sao CAD, không phải dựng từ đầu.
-- **Build From Scratch:** tạo project/design trống, khai báo biến và gọi COM để dựng toàn bộ CAD, coax, port, region và solver. File rỗng ban đầu được lưu để định danh; CAD chỉ lưu khi nhấn Save sau khi các kiểm tra đạt.
+## Giao diện gọn
 
-Chỉnh các ô numeric → Calculate → Update Geometry. Mọi Update tiếp theo dùng cùng project/design. Không sinh VBScript. Nếu cập nhật lỗi, phần mềm thử rollback biến và validate lại; không tự Save.
+| Tab | Số nút chính | Chức năng |
+|---|---:|---|
+| Thông số anten | 3 | Chiều dài mục tiêu, mặc định, cập nhật HFSS; 19 biến độc lập và 12 dẫn xuất |
+| Xem trước 3D | 0 | Một dropdown góc nhìn; vùng anten lớn, xoay/zoom bằng công cụ trục |
+| Kết nối HFSS | 5 | Kết nối, mở, dựng mới, cập nhật, lưu |
+| Mô phỏng | 2 | Kiểm tra mô hình, chạy mô phỏng; một dropdown chọn đồ thị |
+| Nhật ký & kiểm tra | 1 | Xuất nhật ký; chọn dòng xem lỗi và bằng chứng chi tiết |
 
-## Các tab
+## Cấu trúc và giấy phép
 
-| Tab | Chức năng |
-|---|---|
-| ANTENNA PARAMETERS | 19 biến độc lập, 12 biến dẫn xuất, tính/validate đại số, mục tiêu L_patch bất kỳ, JSON tùy chọn |
-| GEOMETRY PREVIEW | Hai tấm trực giao, flare/transition, slot/cavity, base và coax; Front/Side/Top/Isometric, xoay/zoom |
-| LIVE HFSS CONNECTION | Detect/Connect/Reconnect, working copy, build, attach/update, validate, Save/Save As/Reload |
-| SIMULATION | Dải tần, excitation, chạy Setup1 riêng, xuất CSV thật, import và vẽ kết quả |
-| DEBUG & DIAGNOSTICS | 18 checkpoint, dừng từng bước, object inventory, lỗi COM/CAD, restore và xuất log |
+- `automation/`: điều phối job, dùng thư viện, dựng Vivaldi, solver và kiểm tra runtime; không có bộ wrapper COM cũ.
+- `custom_helpers/hfssVivaldiExtensions.m`: những mở rộng thiếu về biểu thức, Equation Surface, Duplicate, CS, BothSides và Discrete Sweep.
+- `core/`: công thức, validation đại số, target length, preview và parser nguồn.
+- `results/`: đọc/vẽ CSV thực và HPBW.
+- `tests/`: hồi quy sinh script/protocol, test GUI MATLAB và test tích hợp HFSS có điều kiện.
+- `third_party/hfss-api/`: nguồn upstream được pin, giữ copyright/GPL; chỉ `hfssExecuteScript` có mở rộng tương thích ngược để chạy nền.
 
-## Tài liệu và log
-
-Hướng dẫn chi tiết trong `docs/`. Log TXT/JSON ở `logs/`; kết quả portable thực chạy trong `tests/verification/`. Nếu HFSS báo lỗi, gửi TXT, JSON chẩn đoán, phiên bản MATLAB/HFSS, checkpoint thất bại và ảnh geometry trong HFSS. Không gửi license hoặc thông tin đăng nhập.
-
-Không có hai ảnh HFSS chuẩn trong workspace của lần bàn giao này. Chưa so sánh ảnh. AEDT ngày 17/10 là nguồn hình học chính, giữ nguyên byte trong `reference/`.
+Xem `docs/HFSS_API_GUIDE.md`, `docs/HFSS_API_EXAMPLE_STUDY.md`, `docs/KNOWN_LIMITATIONS.md`, `NOTICE.md` và `COPYING`. Hai ảnh HFSS chuẩn chưa có trong workspace; chưa so hình ảnh. Hai file nguồn ở root repository và bản tham chiếu AEDT được giữ nguyên.

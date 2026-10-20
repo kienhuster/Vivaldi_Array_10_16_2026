@@ -1,7 +1,9 @@
 classdef HFSSResultImporter
+    % Mục đích: nhập/vẽ CSV thật và đo HPBW từ mẫu; không tạo kết quả anten giả.
     methods (Static)
 
         function data = read(path)
+            % Đọc cột số, giữ header và đơn vị gốc; không tự xác nhận provenance CAD.
             assert(isfile(path), 'Vivaldi:CSV', 'Không có file CSV.');
             tableData = readtable(path, 'VariableNamingRule', 'preserve');
             assert(height(tableData) > 0 && width(tableData) >= 2, 'Vivaldi:CSV', 'CSV cần ít nhất 2 cột và dữ liệu.');
@@ -10,10 +12,11 @@ classdef HFSSResultImporter
             values = table2array(tableData);
             assert(isreal(values) && all(isfinite(values(:))), 'Vivaldi:CSV', 'Dữ liệu cần số thực hữu hạn.');
             data = struct('path', path, 'headers', {tableData.Properties.VariableNames}, 'values', values, ...
-                          'status', 'IMPORTED ACTUAL CSV — geometry provenance unverified');
+                          'status', 'CSV nhập riêng — chưa xác nhận trùng hình học hiện tại');
         end
 
         function plot(ax, data, xColumn, yColumns)
+            % Vẽ các cột thực đã chọn, giữ nhãn đơn vị từ CSV.
             if nargin < 3
                 xColumn = 1;
             end
@@ -29,6 +32,7 @@ classdef HFSSResultImporter
         end
 
         function plot3D(ax, data, thetaColumn, phiColumn, gainColumn)
+            % Dùng mẫu Theta/Phi/Gain thật; không nội suy bổ sung dữ liệu thiếu.
             theta = data.values(:, thetaColumn);
             phi = data.values(:, phiColumn);
             gain = data.values(:, gainColumn);
@@ -41,13 +45,14 @@ classdef HFSSResultImporter
             axis(ax, 'equal');
             colorbar(ax);
             view(ax, 3);
-            title(ax, 'HFSS sampled pattern — radius sqrt(linear gain), color dB');
+            title(ax, 'Giản đồ HFSS lấy mẫu — bán kính căn gain tuyến tính, màu dB');
             xlabel(ax, 'X');
             ylabel(ax, 'Y');
             zlabel(ax, 'Z');
         end
 
         function out = hpbw(angle, gainDB)
+            % Nội suy hai giao điểm peak-3dB quanh búp chính của mặt cắt đã chọn.
             assert(isnumeric(angle) && isnumeric(gainDB) && isreal(angle) && isreal(gainDB), ...
                    'Vivaldi:HPBW', 'Cần angle độ và gain dB thực.');
             angle = angle(:);
@@ -63,7 +68,7 @@ classdef HFSSResultImporter
             right = index - 1 + find(gainDB(index:end) < level, 1, 'first');
             out = struct('widthDeg', NaN, 'leftDeg', NaN, 'rightDeg', NaN, 'peakDB', peak, 'status', 'PENDING');
             if isempty(left) || isempty(right)
-                out.status = 'UNSUPPORTED — thiếu hai giao điểm -3dB';
+                out.status = 'UNSUPPORTED';
                 return
             end
             a = interp1(gainDB(left:left + 1), angle(left:left + 1), level);

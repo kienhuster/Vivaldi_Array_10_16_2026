@@ -1,19 +1,15 @@
-# Giới hạn đã biết
+# Giới hạn và phần còn chờ kiểm chứng
 
-- MATLAB desktop và HFSS COM/CAD/solver **chưa chạy** trên cloud Linux này. Nested SAFEARRAY, CreateEquationSurface 2021 R2, hierarchy CS, point-query trên sheet, port fields và convergence đều cần integration test trên máy đích. Không phát hành với nhãn Fully Verified.
-- Hai ảnh HFSS chuẩn chưa có trong workspace; chưa đối chiếu hình ảnh. Không sử dụng ảnh Internet thay mô hình.
-- Preview là polyshape từ mẫu, có thể cảnh báo khi polygon suy biến. Không chứng minh CAD hoặc tiếp xúc điện.
-- Point probes hữu hạn kiểm tra flare/slot/cavity, thickness, coax; không là chứng minh hình học toàn cục. Nếu sheet point-query unsupported, builder dừng ở CHECK_08. Chưa triển khai phương án thay thế bằng intersection/section CAD có recorder 2021 R2 xác nhận.
-- Parent CS được đọc lại; symbolic origin giữ trong history, chưa có runtime so sánh đầy đủ orientation matrix của tất cả CS trong 2021 R2. Công thức local/global được unit test.
-- Integration line outer-to-inner được tái dựng; hướng azimuth và pha field cần so với mô hình nguồn, không suy từ IDs/tọa độ placeholder.
-- Có hai thay đổi kỹ thuật được công khai: middle cutter Move dùng thickness; cutter snapshots dùng một lần với KeepOriginals=false. Default tương đương theo công thức, Boolean tương đương còn cần chạy HFSS.
-- Chỉ tái dựng các tính chất điện từ vật liệu; không mang toàn bộ thuộc tính cơ/nhiệt. Không tạo Optimetrics hoặc array; mục tiêu là một phần tử dual-pol.
-- COM đồng bộ có thể chặn UI khi dựng/solve; chưa có cancellation/progress đáng tin cậy, không ép kill server. Không tự giả định COM transaction nguyên tử.
-- Unsaved flag theo dõi ứng dụng; sửa CAD bằng tay ngoài ứng dụng có thể không bị phát hiện đầy đủ. Baseline variable readback ngăn ghi đè thay đổi biến ngoài GUI; topology probes chỉ phát hiện các vùng được đo.
-- CSV importer chỉ nhận cột số; chọn cột/đơn vị đúng. Import riêng không xác minh provenance geometry. 3D là scatter từ mẫu thật. HPBW không tự chọn lobe qua discontinuity ±180°.
-- Export tự động chỉ cho dữ liệu vừa giải trong session hiện tại; dự án mở lại có nghiệm cũ cần giải lại qua ứng dụng hoặc import CSV có chú thích provenance. Không suy có kết quả chỉ vì IsSolved trong preview nguồn.
-- NoArray được kiểm tra từ file sau Save; scratch builder không gọi một method SetArraySetup chưa xác minh. Default AEDT cần giữ NoArray; nếu không, Save readback báo lỗi.
-- Chưa export screenshot HFSS tự động; không tạo ảnh giả. Object tree GUI là top-level inventory, xem chi tiết lịch sử CAD trực tiếp trong HFSS.
-- Đường dẫn Unicode và nhiều phiên AEDT cần kiểm thử Windows. Generic ProgID không cho chọn PID cụ thể, kết nối phiên mà COM đăng ký trả về rồi kiểm tra phiên bản.
-
-Mã integration test có sẵn; các mục PENDING cần log/ảnh thật để tiếp tục hoàn thiện, không được đổi nhãn PASS bằng kiểm tra tĩnh.
+- Cloud Linux chưa chạy MATLAB desktop, HFSS 2021 R2 hoặc solver/license. Những điều này vẫn PENDING dù helper generation, math và protocol tests đạt.
+- Preview polyshape là lấy mẫu. Chưa có hai ảnh HFSS chuẩn để so hình ảnh. Point probes hữu hạn không chứng minh toàn bộ topology/tiếp xúc/RF.
+- Point-query trên sheet, parent CS readback, Equation Surface và signature tương thích 2021 R2 cần test thật. Nếu unsupported, compatibility/build dừng; không dựng tiếp một tấm đặc rồi báo đạt.
+- Helper gốc cũ được dùng thật, nhưng cần adapter theo format. Các method/signature như FarFieldSphere, Solve, report category, Lumped Port impedance được chỉnh output có kiểm tra. Giữ bản upstream pin và một bản vá launcher duy nhất; nâng upstream phải chạy lại regression.
+- Không có persistent COM session MATLAB. Trạng thái kết nối là lần phản hồi của script gần nhất; không chọn PID AEDT cụ thể. Nhiều phiên/cùng tên project và file lock có thể làm attach lỗi; path mismatch bị chặn.
+- Launcher chạy nền bằng Java chưa được chạy trên Windows trong cloud. Không coi code0 hoặc process exit là job thành công; chỉ status ACK+VERIFIED+terminal+PARAM mới được chấp nhận. Timeout giữ khóa job, không tự kill HFSS hoặc xóa lock.
+- Script debug dùng MsgBox HFSS; có thể modal và chưa kiểm chứng khả năng tương tác Modeler khi dừng. Không tự export ảnh; cây đối tượng GUI/nhật ký là inventory top-level, lịch sử đầy đủ xem trong HFSS.
+- Integration line outer-to-inner tái dựng từ tọa độ symbolic, chưa so azimuth/pha field với nguồn. NoArray được kiểm tra từ file sau Save, không gọi một SetArraySetup chưa xác minh.
+- Sacrificial cutters KeepOriginals=false, Rectangle covered sheet và Move middle cutter=thickness là khác biệt triển khai công khai so với history serialization nguồn. Đo CAD và mặc định số học chưa thay thế chứng minh Boolean thực.
+- Cavity không được xuyên ngoài biên tấm trong miền topology được hỗ trợ. Không áp min/max preset; một cấu hình bị loại không đồng nghĩa bất khả thi về mọi thiết kế vật lý.
+- Save/Reopen và rollback code có đầy đủ, nhưng HFSS không có transaction nguyên tử. Sửa CAD bên ngoài ứng dụng hoặc đóng GUI khi job chạy có thể cần mở lại bản lưu bằng tay; Dirty chỉ theo dõi ứng dụng.
+- CSV cần cột số hữu hạn; import riêng chưa xác minh geometry. Không tự nhận diện unit khác độ cho 3D hoặc chọn lobe wrap cho HPBW. Lỗi API ở optional expression có thể dừng export job dù các CSV trước đã xuất thật.
+- Lưu shell rỗng khi scratch để định danh; nếu build lỗi trước Save, file recovery chỉ có shell, không phải model đã dựng. Không tự ghi đè nguồn gốc.

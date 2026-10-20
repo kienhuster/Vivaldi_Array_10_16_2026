@@ -1,5 +1,5 @@
 function path = vivaldiCanonicalPath(path)
-    % Resolve symlinks, .. and Windows case before a write; no shell quoting.
+    % Mục đích: chuẩn hóa symlink, dấu .. và đường dẫn Windows trước khi ghi.
     assert(ischar(path) || (isstring(path) && isscalar(path)), 'Vivaldi:Path', 'Cần đường dẫn scalar.');
     path = char(path);
     assert(~isempty(path), 'Vivaldi:Path', 'Đường dẫn rỗng.');

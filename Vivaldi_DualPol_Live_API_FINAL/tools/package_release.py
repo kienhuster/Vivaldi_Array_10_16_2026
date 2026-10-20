@@ -1,4 +1,4 @@
-"""Build, extract and verify this ZIP. Optional developer tool; stdlib only."""
+"""Đóng gói, giải nén và kiểm tra ZIP; công cụ tùy chọn, chỉ dùng Python stdlib."""
 from pathlib import Path
 import hashlib, json, tempfile, zipfile
 from datetime import datetime, timezone
@@ -27,9 +27,13 @@ def verify(destination, hashes):
         for name, digest in hashes.items():
             assert sha((base/name).read_bytes()) == digest, name
         assert (base/'Vivaldi_DualPol_Live_API.m').is_file()
-        assert (base/'com'/'HFSSCOMConnection.m').is_file()
+        assert (base/'automation'/'VivaldiHFSS.m').is_file()
+        assert (base/'custom_helpers'/'hfssVivaldiExtensions.m').is_file()
+        assert (base/'third_party'/'hfss-api'/'general'/'hfssExecuteScript.m').is_file()
+        assert (base/'third_party'/'hfss-api'/'COPYING').is_file()
+        assert (base/'COPYING').is_file()
         assert (base/'docs'/'KNOWN_LIMITATIONS.md').is_file()
-        assert (base/'tests'/'runCOMCompatibilityTests.m').is_file()
+        assert (base/'tests'/'runHFSSAPIIntegration.m').is_file()
         return len(list(base.rglob('*')))
 if __name__ == '__main__':
     target=ROOT.parent/(ROOT.name+'.zip')
