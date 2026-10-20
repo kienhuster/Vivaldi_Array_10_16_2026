@@ -27,3 +27,15 @@ runHFSSBuildIntegration('D:\Program Files\AnsysEM\AnsysEM21.2\Win64\ansysedt.exe
 ```
 
 Hàm tích hợp chạy Rectangle thử trước, sau đó anten đầy đủ; đọc log CHECK_01..18 để xem phép đo. Tham số cuối true mới cho phép chạy solver. Không bật solver để chỉ kiểm tra dựng CAD.
+
+## Hồi quy lỗi truy vấn 450
+
+Bổ sung kiểm tra script CHECK_02/03 đọc riêng Sheets, tách lỗi query khỏi False, duy trì đủ 18 checkpoint, trace statement và SaveAs debug riêng. Trên Linux chỉ chạy kiểm tra sinh script và audit tĩnh; runtime query/COM và tất cả CAD vẫn PENDING.
+
+Có test fixture Windows cho mảng/chuỗi/Empty/Null, loại trùng, query lỗi 450 theo nhóm, giá trị trả về không hợp lệ và debug opt-in/không ghi đè. Chạy từ thư mục ứng dụng:
+
+```text
+cscript //nologo tests\testRuntimeQueries.vbs custom_helpers\hfssVivaldiChecks.vbs
+```
+
+Fixture chỉ dùng FakeEditor/FakeProject, không tạo hay validate CAD HFSS. Test này chưa được chạy ở Cloud và không thay thế runHFSSBuildIntegration trên HFSS thật.

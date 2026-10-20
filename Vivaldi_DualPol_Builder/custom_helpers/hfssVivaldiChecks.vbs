@@ -8,32 +8,139 @@ Sub WriteStatus(text)
 End Sub
 Sub Stage(name)
   vStage = name
-  WriteStatus "CHECK|" & name & "|PENDING|PENDING|Đang thực hiện"
+  Select Case name
+    Case "CHECK_01": vStageName = "Tạo hệ tọa độ"
+    Case "CHECK_02": vStageName = "Tạo và truy vấn mặt loe dài"
+    Case "CHECK_03": vStageName = "Tạo và truy vấn mặt loe ngắn"
+    Case "CHECK_04": vStageName = "Copy/Paste và trim mặt loe"
+    Case "CHECK_05": vStageName = "Rotate transition"
+    Case "CHECK_06": vStageName = "Tạo Rectangle khe/cavity"
+    Case "CHECK_07": vStageName = "Unite vùng khoét"
+    Case "CHECK_08": vStageName = "Subtract vùng loe khỏi tấm"
+    Case "CHECK_09": vStageName = "SheetThicken BothSides"
+    Case "CHECK_10": vStageName = "DuplicateAroundAxis phân cực hai"
+    Case "CHECK_11": vStageName = "Tạo khối nối và đế"
+    Case "CHECK_12": vStageName = "Unite thân nhôm"
+    Case "CHECK_13": vStageName = "Tạo coax thứ nhất"
+    Case "CHECK_14": vStageName = "Duplicate coax và cổng"
+    Case "CHECK_15": vStageName = "Khoét coax và đo CAD"
+    Case "CHECK_16": vStageName = "Gán hai Lumped Ports"
+    Case "CHECK_17": vStageName = "Gán Radiation Boundary"
+    Case "CHECK_18": vStageName = "Thiết lập solver và sweep"
+    Case Else: vStageName = name
+  End Select
+  WriteStatus "CHECK|" & name & "|PENDING|PENDING|" & vStageName
+End Sub
+Sub TraceCommand(command)
+  vCommand = command
+  WriteStatus "COMMAND|" & vStage & "|" & CleanLine(vStageName) & "|" & CleanLine(command)
+End Sub
+Sub OperationFailed(operation, phase, number, source, description)
+  WriteStatus "ERROR|" & vStage & "|" & CleanLine(vStageName) & "|" & phase & "|" & CleanLine(operation) & "|" & CleanLine(vCommand) & "|" & CStr(number) & "|" & CleanLine(source) & "|" & CleanLine(description)
+  If phase = "QUERY" Then
+    Fail "Lỗi truy vấn kiểm chứng; chưa thể kết luận đối tượng thiếu. " & CStr(number) & " " & description
+  Else
+    Fail operation & ": " & CStr(number) & " " & description
+  End If
 End Sub
 Sub Fail(message)
   WriteStatus "CHECK|" & vStage & "|FAIL|PENDING|" & CleanLine(message)
+  TrySaveDebug
   WriteStatus "STATE|FAILED"
+End Sub
+Sub TrySaveDebug()
+  Dim number, description
+  If Not vSaveDebug Then Exit Sub
+  If Not IsObject(oProject) Then
+    WriteStatus "DEBUG|UNAVAILABLE|Chưa có project để lưu"
+    Exit Sub
+  End If
+  Err.Clear
+  On Error Resume Next
+  If fs.FileExists(vDebugPath) Then
+    WriteStatus "DEBUG|SKIPPED_EXISTS|" & vDebugPath
+  Else
+    oProject.SaveAs vDebugPath, False
+    number = Err.Number: description = Err.Description
+    Err.Clear
+    If number <> 0 Then
+      WriteStatus "DEBUG|FAILED|" & CStr(number) & "|" & CleanLine(description)
+    ElseIf fs.FileExists(vDebugPath) Then
+      WriteStatus "DEBUG|SAVED_INCOMPLETE|" & vDebugPath & "|CAD debug chưa hoàn chỉnh, không phải anten đã kiểm chứng"
+    Else
+      WriteStatus "DEBUG|FAILED|Không tìm thấy CAD debug sau SaveAs"
+    End If
+  End If
+  On Error GoTo 0
 End Sub
 Function CleanLine(value)
   CleanLine = Replace(Replace(Replace(CStr(value), vbCr, " "), vbLf, " "), "|", "/")
 End Function
-Function ObjectNames()
-  Dim names, groupName, objects, objectName
-  Set names = CreateObject("Scripting.Dictionary")
-  names.CompareMode = 1
-  For Each groupName In Array("Solids", "Sheets", "Lines", "Unclassified")
-    objects = oEditor.GetObjectsInGroup(CStr(groupName))
-    If IsArray(objects) Then
-      For Each objectName In objects
-        names(CStr(objectName)) = True
-      Next
-    ElseIf Not IsEmpty(objects) Then
-      If Not IsNull(objects) Then
-        If CStr(objects) <> "" Then names(CStr(objects)) = True
-      End If
-    End If
+Function QueryGroup(groupName)
+  ' Chỉ truy vấn một nhóm: lỗi COM được ghi riêng trước khi chuẩn hóa danh sách.
+  Dim objects, number, source, description, names, item, count, kind, command
+  command = "oEditor.GetObjectsInGroup(" & Chr(34) & CStr(groupName) & Chr(34) & ")"
+  TraceCommand command
+  Err.Clear
+  On Error Resume Next
+  objects = oEditor.GetObjectsInGroup(CStr(groupName))
+  number = Err.Number: source = Err.Source: description = Err.Description
+  On Error GoTo 0
+  If number <> 0 Then
+    WriteStatus "QUERY|" & vStage & "|" & command & "|ERROR|" & CStr(number) & "|" & CleanLine(source) & "|" & CleanLine(description)
+    Err.Raise number, command, description
+  End If
+  kind = TypeName(objects)
+  names = NormalizeObjectNames(objects, command)
+  count = 0
+  For Each item In names
+    count = count + 1
   Next
-  ObjectNames = names.Keys
+  WriteStatus "QUERY|" & vStage & "|" & command & "|OK|" & kind & "|" & CStr(count) & "|" & CleanLine(Join(names, ","))
+  QueryGroup = names
+End Function
+Function NormalizeObjectNames(objects, command)
+  ' Chấp nhận SAFEARRAY, chuỗi đơn và nhóm rỗng; kiểu lạ là lỗi, không suy ra không có mặt.
+  Dim names, item, count
+  names = Array(): count = 0
+  If IsArray(objects) Then
+    For Each item In objects
+      AddObjectName names, count, item
+    Next
+  ElseIf IsEmpty(objects) Or IsNull(objects) Then
+    ' Nhóm rỗng là kết quả hợp lệ, khác với lỗi truy vấn.
+  ElseIf VarType(objects) = 8 Then
+    AddObjectName names, count, objects
+  Else
+    WriteStatus "QUERY|" & vStage & "|" & command & "|INVALID_RETURN|" & TypeName(objects)
+    Err.Raise 513, command, "Kiểu trả về không hỗ trợ: " & TypeName(objects)
+  End If
+  NormalizeObjectNames = names
+End Function
+Sub AddObjectName(ByRef names, ByRef count, value)
+  If IsEmpty(value) Or IsNull(value) Then Exit Sub
+  If VarType(value) <> 8 Then Err.Raise 513, "AddObjectName", "Tên đối tượng không phải chuỗi: " & TypeName(value)
+  If CStr(value) = "" Then Exit Sub
+  If HasName(names, CStr(value)) Then Exit Sub
+  If count = 0 Then
+    names = Array(CStr(value))
+  Else
+    ReDim Preserve names(count)
+    names(count) = CStr(value)
+  End If
+  count = count + 1
+End Sub
+Function ObjectNames()
+  ' Không dùng default Item/Keys của Dictionary; không nuốt lỗi bất kỳ nhóm nào.
+  Dim names, groupName, objects, objectName, count
+  names = Array(): count = 0
+  For Each groupName In Array("Sheets", "Solids", "Lines", "Unclassified")
+    objects = QueryGroup(CStr(groupName))
+    For Each objectName In objects
+      AddObjectName names, count, objectName
+    Next
+  Next
+  ObjectNames = names
 End Function
 Function HasName(values, target)
   Dim name
@@ -61,9 +168,12 @@ Sub CloneNamed(sourceName, desiredName, operation)
   beforeNames = ObjectNames()
   If Not HasName(beforeNames, sourceName) Or HasName(beforeNames, desiredName) Then Err.Raise 513, "CloneNamed", "Tên nguồn/đích clone không hợp lệ"
   If operation = "copy" Then
+    TraceCommand "oEditor.Copy / source=" & sourceName
     oEditor.Copy Array("NAME:Selections", "Selections:=", sourceName)
+    TraceCommand "oEditor.Paste / source=" & sourceName
     oEditor.Paste
   ElseIf operation = "rotate" Then
+    TraceCommand "oEditor.DuplicateAroundAxis / source=" & sourceName & " / Z=-90deg / RelativeCS1"
     oEditor.DuplicateAroundAxis Array("NAME:Selections", "Selections:=", sourceName, "NewPartsModelFlag:=", "Model"), Array("NAME:DuplicateAroundAxisParameters", "CreateNewObjects:=", True, "WhichAxis:=", "Z", "AngleStr:=", "-90deg", "NumClones:=", "2"), Array("NAME:Options", "DuplicateAssignments:=", False)
   Else
     Err.Raise 513, "CloneNamed", "Kiểu clone không hợp lệ"
@@ -74,22 +184,28 @@ Sub CloneNamed(sourceName, desiredName, operation)
   Next
   If count <> 1 Then Err.Raise 513, "CloneNamed", "Clone phải tạo đúng một đối tượng"
   If StrComp(CStr(newName), desiredName, 0) <> 0 Then
+    TraceCommand "oEditor.ChangeProperty / rename=" & CStr(newName) & " -> " & desiredName
     oEditor.ChangeProperty Array("NAME:AllTabs", Array("NAME:Geometry3DAttributeTab", Array("NAME:PropServers", newName), Array("NAME:ChangedProps", Array("NAME:Name", "Value:=", desiredName))))
   End If
-  If Not HasName(ObjectNames(), desiredName) Then Err.Raise 513, "CloneNamed", "Không đọc lại được clone"
+  afterNames = ObjectNames()
+  If Not HasName(afterNames, desiredName) Then Err.Raise 513, "CloneNamed", "Không đọc lại được clone"
 End Sub
 Function PointMatches(name, xyz, expected)
   Dim bodies
+  TraceCommand "oEditor.GetBodyNamesByPosition / object=" & name & " / xyz=" & CStr(xyz(0)) & "," & CStr(xyz(1)) & "," & CStr(xyz(2))
   bodies = oEditor.GetBodyNamesByPosition(Array("NAME:Parameters", "XPosition:=", CStr(xyz(0)) & "mm", "YPosition:=", CStr(xyz(1)) & "mm", "ZPosition:=", CStr(xyz(2)) & "mm"))
+  bodies = NormalizeObjectNames(bodies, "oEditor.GetBodyNamesByPosition")
   PointMatches = (HasName(bodies, name) = expected)
 End Function
 Function BodyBoundsMatch(name, expected)
   Dim ids, id, xyz, bounds, i
   BodyBoundsMatch = False
+  TraceCommand "oEditor.GetVertexIDsFromObject / object=" & name
   ids = oEditor.GetVertexIDsFromObject(name)
   If Not IsArray(ids) Then Exit Function
   bounds = Array(1E+100, -1E+100, 1E+100, -1E+100, 1E+100, -1E+100)
   For Each id In ids
+    TraceCommand "oEditor.GetVertexPosition / id=" & CStr(id)
     xyz = oEditor.GetVertexPosition(id)
     For i = 0 To 2
       If CDbl(xyz(i)) < bounds(2*i) Then bounds(2*i) = CDbl(xyz(i))
@@ -104,10 +220,13 @@ End Function
 Function CircleMatches(name, center, radius)
   Dim faces, face, count, xyz, area
   CircleMatches = False: count = 0
+  TraceCommand "oEditor.GetFaceIDs / object=" & name
   faces = oEditor.GetFaceIDs(name)
   For Each face In faces
     count = count + 1
+    TraceCommand "oEditor.GetFaceArea / face=" & CStr(face)
     area = CDbl(oEditor.GetFaceArea(face))
+    TraceCommand "oEditor.GetFaceCenter / face=" & CStr(face)
     xyz = oEditor.GetFaceCenter(face)
     If Abs(area - 4*Atn(1)*radius*radius) > 0.000001 Then Exit Function
     If Abs(CDbl(xyz(0))-center(0)) > 0.00001 Or Abs(CDbl(xyz(1))-center(1)) > 0.00001 Or Abs(CDbl(xyz(2))-center(2)) > 0.00001 Then Exit Function
@@ -115,11 +234,14 @@ Function CircleMatches(name, center, radius)
   CircleMatches = (count = 1)
 End Function
 Function VolumeMatches(name, volume)
+  TraceCommand "oEditor.GetObjectVolume / object=" & name
   VolumeMatches = (Abs(CDbl(oEditor.GetObjectVolume(name))-volume) < 0.0000001 + Abs(volume)*0.00001)
 End Function
 Function MaterialMatches(name, material, inside)
   Dim actual, solveInside
+  TraceCommand "oEditor.GetPropertyValue / Material / object=" & name
   actual = Replace(CStr(oEditor.GetPropertyValue("Geometry3DAttributeTab", name, "Material")), Chr(34), "")
+  TraceCommand "oEditor.GetPropertyValue / Solve Inside / object=" & name
   solveInside = LCase(CStr(oEditor.GetPropertyValue("Geometry3DAttributeTab", name, "Solve Inside")))
   MaterialMatches = (LCase(actual) = LCase(material) And solveInside = LCase(CStr(inside)))
 End Function
@@ -133,6 +255,7 @@ Function PairExists(values, name, kind)
 End Function
 Function ExactlyTwoPorts()
   Dim values
+  TraceCommand "oBoundary.GetExcitations() / expected Lumped Ports 1,2"
   values = oBoundary.GetExcitations()
   ExactlyTwoPorts = False
   If Not IsArray(values) Then Exit Function
@@ -168,11 +291,13 @@ Function LiteralNumber(raw, unit)
 End Function
 Function VariableMatches(name, expected, unit)
   Dim actual
+  TraceCommand "oDesign.GetVariableValue / variable=" & name
   actual = LiteralNumber(oDesign.GetVariableValue(name),unit)
   VariableMatches = (Abs(actual-expected) <= (1+Abs(expected))*0.0000000001)
 End Function
 Function ExpressionMatches(name, expected)
   Dim text
+  TraceCommand "oDesign.GetVariableValue / expression=" & name
   text = CStr(oDesign.GetVariableValue(name))
   text = Replace(Replace(Replace(Replace(text," ",""),vbTab,""),vbCr,""),vbLf,"")
   expected = Replace(expected," ","")
@@ -181,6 +306,7 @@ End Function
 Function HasRealData(category, solution, context, families, expressions, fieldGHz)
   Dim variations, variation, expression, values, value, found, frequencies, frequency, units, factor, frequencyOK
   HasRealData = False
+  TraceCommand "oReport.GetSolutionDataPerVariation / category=" & category & " / solution=" & solution
   variations = oReport.GetSolutionDataPerVariation(category,solution,context,families,expressions)
   If Not IsArray(variations) Then Exit Function
   For Each expression In expressions

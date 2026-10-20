@@ -9,8 +9,8 @@
   },
   "generatedScripts": [
     {
-      "file": "/tmp/vivaldi-build-only-release/scripts/oct-M7tGME/build.vbs",
-      "bytes": 329202,
+      "file": "/tmp/vivaldi-query450-release/scripts/oct-4mstSP/build.vbs",
+      "bytes": 799457,
       "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -21,8 +21,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-build-only-release/scripts/oct-7hONmH/build.vbs",
-      "bytes": 332365,
+      "file": "/tmp/vivaldi-query450-release/scripts/oct-FVmjse/build.vbs",
+      "bytes": 828187,
       "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -33,8 +33,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-build-only-release/scripts/oct-7SY06E/build.vbs",
-      "bytes": 24757,
+      "file": "/tmp/vivaldi-query450-release/scripts/oct-3Cqmhf/build.vbs",
+      "bytes": 47054,
       "maxPhysicalLine": 852,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -45,9 +45,9 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-build-only-release/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-PHXe6x/build.vbs",
-      "bytes": 333038,
-      "maxPhysicalLine": 889,
+      "file": "/tmp/vivaldi-query450-release/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-VsqqYC/build.vbs",
+      "bytes": 807599,
+      "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
         "strings/parentheses",
@@ -57,9 +57,9 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-build-only-release/encoding.vbs",
-      "bytes": 14321,
-      "maxPhysicalLine": 519,
+      "file": "/tmp/vivaldi-query450-release/encoding.vbs",
+      "bytes": 26637,
+      "maxPhysicalLine": 755,
       "checks": [
         "ASCII/no BOM/NUL",
         "strings/parentheses",
@@ -69,8 +69,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-build-only-release/simulate.vbs",
-      "bytes": 73609,
+      "file": "/tmp/vivaldi-query450-release/simulate.vbs",
+      "bytes": 142059,
       "maxPhysicalLine": 898,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -81,8 +81,20 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-build-only-release/collision/scripts/oct-R5XZIH/build.vbs",
-      "bytes": 24807,
+      "file": "/tmp/vivaldi-query450-release/collision/scripts/oct-lBW2Yk/build.vbs",
+      "bytes": 47207,
+      "maxPhysicalLine": 852,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-query450-focused/scripts/oct-bekzFf/build.vbs",
+      "bytes": 47080,
       "maxPhysicalLine": 852,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -93,5 +105,26 @@
       ]
     }
   ],
+  "HFSSCheckpointStatus": {
+    "CHECK_01": "PENDING",
+    "CHECK_02": "PENDING",
+    "CHECK_03": "PENDING",
+    "CHECK_04": "PENDING",
+    "CHECK_05": "PENDING",
+    "CHECK_06": "PENDING",
+    "CHECK_07": "PENDING",
+    "CHECK_08": "PENDING",
+    "CHECK_09": "PENDING",
+    "CHECK_10": "PENDING",
+    "CHECK_11": "PENDING",
+    "CHECK_12": "PENDING",
+    "CHECK_13": "PENDING",
+    "CHECK_14": "PENDING",
+    "CHECK_15": "PENDING",
+    "CHECK_16": "PENDING",
+    "CHECK_17": "PENDING",
+    "CHECK_18": "PENDING"
+  },
+  "WindowsQueryFixtures": "PENDING",
   "scope": "Static only; Windows compiler, GUI and HFSS remain PENDING."
 }

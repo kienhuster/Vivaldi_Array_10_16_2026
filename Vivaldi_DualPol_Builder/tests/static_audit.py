@@ -55,6 +55,7 @@ def audit_script(path):
                        'line/continuation limits', 'Unicode ChrW roundtrip']}
 def main():
     parser = argparse.ArgumentParser(); parser.add_argument('--results', type=Path, required=True)
+    parser.add_argument('--extra-script', type=Path, action='append', default=[])
     args = parser.parse_args()
     for name, digest in PROTECTED.items():
         assert sha(ROOT.parent/name) == digest and sha(ROOT/'reference'/name) == digest
@@ -77,11 +78,22 @@ def main():
         assert 'classdef' not in source and 'actxserver' not in source
         assert 'Mục đích:' in source
     assert not (ROOT/'automation').exists() and not (ROOT/'core').exists()
+    runtime = (ROOT/'custom_helpers/hfssVivaldiChecks.vbs').read_text()
+    assert 'CreateObject("Scripting.Dictionary")' not in runtime
+    assert 'objects = QueryGroup(CStr(groupName))' in runtime
+    assert 'Err.Raise number, command, description' in runtime
+    assert 'oProject.SaveAs vDebugPath, False' in runtime
+    builder = (ROOT/'Vivaldi_HFSS_Builder.m').read_text()
+    for surface in ('EquationSurface1', 'EquationSurface2'):
+        assert f'HasName(ObjectNames(),"{surface}")' not in builder
+        assert f'HasName(sbObjects,"{surface}")' in builder
+    assert builder.count('sbObjects = QueryGroup("Sheets")') == 2
     result = json.loads(args.results.read_text())
     scripts = [audit_script(Path(path)) for path in result['scripts']]
+    scripts.extend(audit_script(path) for path in args.extra_script)
     report = {'status': 'PASS', 'ownMainFiles': 4, 'ownHelperMATLABFiles': 2,
               'upstreamFilesVerified': 89, 'protectedFilesSHA256': PROTECTED,
-              'generatedScripts': scripts, 'scope': 'Static only; Windows compiler, GUI and HFSS remain PENDING.'}
+              'generatedScripts': scripts, 'HFSSCheckpointStatus': {f'CHECK_{k:02d}': 'PENDING' for k in range(1, 19)}, 'WindowsQueryFixtures': 'PENDING', 'scope': 'Static only; Windows compiler, GUI and HFSS remain PENDING.'}
     (ROOT/'tests/verification/static-audit.json').write_text(json.dumps(report, indent=2)+'\n')
     print(json.dumps({'status': 'PASS', 'scripts': len(scripts), 'ownMATLABFiles': len(own)}))
 if __name__ == '__main__': main()

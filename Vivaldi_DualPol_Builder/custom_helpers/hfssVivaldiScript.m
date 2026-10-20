@@ -1,7 +1,9 @@
-function w = hfssVivaldiScript(path, statusPath, id)
+function w = hfssVivaldiScript(path, statusPath, id, saveDebug)
 % Mục đích: ghi script bằng helper thật, giữ biểu thức và bảo vệ mã hóa đường dẫn.
 % Đây là struct callback nhỏ; không có lớp, session COM hoặc cơ chế rollback.
 % Chỉ script cuối được đổi thành ASCII không BOM; status do VBS ghi UTF-16LE.
+if nargin < 4, saveDebug = false; end
+assert(islogical(saveDebug) && isscalar(saveDebug), 'Vivaldi:Debug', 'Tùy chọn debug phải là logical scalar.');
 fid = fopen(path, 'w', 'n', 'UTF-8');
 assert(fid >= 0, 'Vivaldi:Script', 'Không ghi được script.');
 w = struct('line', @line, 'call', @call, 'require', @require, 'stage', @stage, ...
@@ -9,10 +11,12 @@ w = struct('line', @line, 'call', @call, 'require', @require, 'stage', @stage, .
     'literal', @literal, 'finish', @finish, 'abort', @abort);
 line('Option Explicit');
 line('Dim oHfssApp, oDesktop, oProject, oDesign, oEditor, oModule, oMaterials, oBoundary, oSolutions, oReport');
-line('Dim fs, vStatusPath, vStage, sbErr, sbDesc, sbCondition, sbHasData, vOpened, vStream');
+line('Dim fs, vStatusPath, vStage, vStageName, vCommand, vSaveDebug, vDebugPath, sbErr, sbSource, sbDesc, sbCondition, sbObjects, sbHasData, vOpened, vStream');
 line('Set fs = CreateObject("Scripting.FileSystemObject")');
 line(['vStatusPath = ' quote(statusPath)]);
-line('vStage = "BAT_DAU"');
+line('vStage = "BAT_DAU": vStageName = "Khởi tạo": vCommand = ""');
+line(['vSaveDebug = ' literal(saveDebug)]);
+line(['vDebugPath = ' quote(fullfile(fileparts(statusPath), 'CAD_DEBUG_INCOMPLETE.aedt'))]);
 line('Set vStream = fs.CreateTextFile(vStatusPath, True, True)');
 line('vStream.Close');
 line(['WriteStatus ' quote(['JOB|' id])]);
@@ -24,19 +28,44 @@ line('Sub Main()');
         fprintf(fid, '%s\n', text);
     end
 
-    function call(text, label)
-        % Guard theo thao tác giúp log lỗi thật và dừng trước Save khi CAD sai.
-        line('Err.Clear');
-        line('On Error Resume Next');
-        line(text);
-        line('sbErr = Err.Number: sbDesc = Err.Description');
-        line('On Error GoTo 0');
-        line(['If sbErr <> 0 Then Fail ' quote(label) ' & ": " & CStr(sbErr) & " " & sbDesc: Exit Sub']);
+    function call(text, label, phase)
+        % Ghi lệnh thực tế; guard từng statement để lỗi SetModule không bị che bởi lệnh sau.
+        if nargin < 3, phase = 'COMMAND'; end
+        logicalText = regexprep(text, '[ \t]+_\r?\n[ \t]*', ' ');
+        statements = regexp(logicalText, '\r?\n', 'split');
+        statements = statements(~cellfun(@(value)isempty(strtrim(value)), statements));
+        if ~isempty(regexp(logicalText, '(?m)^\s*(If |Else|End If)', 'once'))
+            % Block chọn project khi solve giữ nguyên control flow, không Execute động.
+            statements = {logicalText};
+        end
+        for n = 1:numel(statements)
+            command = strrep(strrep(statements{n}, char(13), ' '), char(10), ' / ');
+            line('vCommand = ""');
+            % Chia literal log thành statement ngắn; không vượt giới hạn continuation.
+            bytes = unicode2native(command, 'UTF-16LE'); first = 1;
+            while first <= numel(bytes)
+                last = min(first + 159, numel(bytes));
+                unit = double(bytes(last - 1)) + 256 * double(bytes(last));
+                if last < numel(bytes) && unit >= 55296 && unit <= 56319, last = last - 2; end
+                chunk = native2unicode(bytes(first:last), 'UTF-16LE');
+                line(['vCommand = vCommand & ' quote(chunk)]);
+                first = last + 1;
+            end
+            line('TraceCommand vCommand');
+            line('Err.Clear');
+            line('On Error Resume Next');
+            line(statements{n});
+            line('sbErr = Err.Number: sbSource = Err.Source: sbDesc = Err.Description');
+            line('On Error GoTo 0');
+            line(['If sbErr <> 0 Then OperationFailed ' quote(label) ', ' quote(phase) ', sbErr, sbSource, sbDesc: Exit Sub']);
+            line(['WriteStatus "OPERATION|" & vStage & "|' phase '|METHOD_OK|" & CleanLine(vCommand)']);
+        end
     end
 
     function require(condition, message)
-        call(['sbCondition = (' condition ')'], message);
-        line(['If Not sbCondition Then Fail ' quote(message) ': Exit Sub']);
+        % Lỗi API khi tính predicate khác với predicate trả False; không báo thiếu mặt khi query lỗi.
+        call(['sbCondition = (' condition ')'], 'Không thực hiện được truy vấn kiểm chứng', 'QUERY');
+        line(['If Not sbCondition Then OperationFailed ' quote(message) ', "ASSERTION", 513, "Vivaldi.Validation", "Dieu kien tra ve False": Exit Sub']);
     end
 
     function stage(name)

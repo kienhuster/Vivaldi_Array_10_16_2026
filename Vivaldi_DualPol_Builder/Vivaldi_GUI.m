@@ -44,8 +44,8 @@ viewChoice = uidropdown(previewGrid, 'Items', {'3D', 'Chính diện', 'Bên cạ
 preview = uiaxes(previewGrid);
 
 %% 3. Thư mục xuất và Ansys; mỗi lệnh dựng sinh một tên AEDT mới
-buildGrid = uigridlayout(t3, [6 3]);
-buildGrid.RowHeight = {35, 35, 45, 45, 65, '1x'}; buildGrid.ColumnWidth = {150, '1x', 150};
+buildGrid = uigridlayout(t3, [7 3]);
+buildGrid.RowHeight = {35, 35, 45, 45, 30, 65, '1x'}; buildGrid.ColumnWidth = {150, '1x', 150};
 uilabel(buildGrid, 'Text', 'Thư mục xuất');
 outputField = uieditfield(buildGrid, 'text', 'Value', fullfile(root, 'output'));
 outputChoose = uibutton(buildGrid, 'Text', 'Chọn thư mục', 'ButtonPushedFcn', @chooseOutput);
@@ -56,10 +56,12 @@ createButton = uibutton(buildGrid, 'Text', 'Tạo anten HFSS', 'ButtonPushedFcn'
 createButton.Layout.Row = 3; createButton.Layout.Column = [1 3];
 openButton = uibutton(buildGrid, 'Text', 'Mở file HFSS vừa tạo', 'Enable', 'off', 'ButtonPushedFcn', @openAntenna);
 openButton.Layout.Row = 4; openButton.Layout.Column = [1 3];
+debugChoice = uicheckbox(buildGrid, 'Text', 'Lưu CAD debug riêng nếu gặp lỗi (chưa hoàn chỉnh)', 'Value', false);
+debugChoice.Layout.Row = 5; debugChoice.Layout.Column = [1 3];
 createdPath = uilabel(buildGrid, 'Text', 'Chưa tạo anten. Mỗi lần tạo sẽ dùng một file mới.', 'WordWrap', 'on', 'Interpreter', 'none');
-createdPath.Layout.Row = 5; createdPath.Layout.Column = [1 3];
+createdPath.Layout.Row = 6; createdPath.Layout.Column = [1 3];
 buildStatus = uilabel(buildGrid, 'Text', 'Chưa khởi chạy HFSS.', 'WordWrap', 'on');
-buildStatus.Layout.Row = 6; buildStatus.Layout.Column = [1 3];
+buildStatus.Layout.Row = 7; buildStatus.Layout.Column = [1 3];
 
 %% 4. Chỉ chạy solver khi người dùng bấm, chỉ vẽ CSV xuất từ HFSS thật
 simGrid = uigridlayout(t4, [8 2]);
@@ -136,7 +138,7 @@ parameterChanged();
         try
             assert(ispc && isfile(exeField.Value), 'Vivaldi:HFSS', 'Cần Windows và đường dẫn ansysedt.exe hợp lệ.');
             parameterChanged();
-            candidate = Vivaldi_HFSS_Builder('generate', p, outputField.Value, simulationConfig());
+            candidate = Vivaldi_HFSS_Builder('generate', p, outputField.Value, simulationConfig(), 'full', debugChoice.Value);
             job = Vivaldi_HFSS_Builder('launch', candidate, exeField.Value);
             built = []; createdPath.Text = ['Đang dựng, chưa xác nhận file: ' job.projectPath];
             reportChoice.Enable = 'off'; cla(resultAxes);
@@ -215,7 +217,7 @@ parameterChanged();
         outputField.Enable = value; exeField.Enable = value;
         for name = fieldnames(fields)', fields.(name{1}).Enable = value; end
         for name = simNames, simulationFields.(name{1}).Enable = value; end
-        sourceChoice.Enable = value;
+        sourceChoice.Enable = value; debugChoice.Enable = value;
         canUse = ~busy && ~isempty(built) && strcmp(built.state, 'SUCCEEDED');
         openButton.Enable = 'off'; simulateButton.Enable = 'off';
         if canUse, openButton.Enable = 'on'; simulateButton.Enable = 'on'; end

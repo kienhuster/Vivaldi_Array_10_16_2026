@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "scope": "Generated script/static checks only; no CAD execution.",
+  "script": "/tmp/vivaldi-query450-focused/scripts/oct-bekzFf/build.vbs",
+  "debugEnabled": true,
+  "debugPath": "/tmp/vivaldi-query450-focused/scripts/oct-bekzFf/CAD_DEBUG_INCOMPLETE.aedt",
+  "checks": [
+    "debug opt-in true",
+    "clone readback uses local array",
+    "ASCII script audit"
+  ],
+  "WindowsVBScriptFixtures": "PENDING",
+  "HFSSCheckpointStatus": {
+    "CHECK_01": "PENDING",
+    "CHECK_02": "PENDING",
+    "CHECK_03": "PENDING",
+    "CHECK_04": "PENDING",
+    "CHECK_05": "PENDING",
+    "CHECK_06": "PENDING",
+    "CHECK_07": "PENDING",
+    "CHECK_08": "PENDING",
+    "CHECK_09": "PENDING",
+    "CHECK_10": "PENDING",
+    "CHECK_11": "PENDING",
+    "CHECK_12": "PENDING",
+    "CHECK_13": "PENDING",
+    "CHECK_14": "PENDING",
+    "CHECK_15": "PENDING",
+    "CHECK_16": "PENDING",
+    "CHECK_17": "PENDING",
+    "CHECK_18": "PENDING"
+  }
+}

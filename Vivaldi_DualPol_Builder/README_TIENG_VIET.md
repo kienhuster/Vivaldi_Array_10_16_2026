@@ -36,3 +36,5 @@ Kiểm tra công thức, gọi helper sinh script và guard chạy trên Linux/O
 Hai tệp nguồn ngày17/10 ở repository root và reference được bảo toàn SHA256. Standard_Vivaldi_GUI.m trong reference chỉ dùng đối chiếu phong cách, không phải ứng dụng bổ sung và không thay hình học nguồn. Thư mục reference không được addpath.
 
 Mã kết hợp dùng GPL-2.0-or-later; giữ nguyên COPYING/NOTICE và thông tin tác giả upstream. MATLAB/Ansys và dữ liệu người dùng giữ quyền tương ứng.
+
+Bản vá CHECK_02/03 tách truy vấn Sheets khỏi phép dựng mặt; xem mục lỗi450 trong [chẩn đoán](docs/TROUBLESHOOTING.md). Checkbox lưu CAD debug tạo file INCOMPLETE riêng khi lỗi; không phải anten hoàn chỉnh. CAD thực tế của bản vá còn Pending.

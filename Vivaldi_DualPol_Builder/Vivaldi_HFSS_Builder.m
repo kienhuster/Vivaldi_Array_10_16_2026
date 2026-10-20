@@ -23,7 +23,10 @@ switch action
         [path, reservation] = reserveNewPath(folder);
         out = newJob(path, folder, p, cfg, 'build');
         out.reservation = reservation; out.mode = mode;
-        w = hfssVivaldiScript(out.scriptPath, out.statusPath, out.id);
+        saveDebug = false; if numel(varargin) >= 5, saveDebug = varargin{5}; end
+        out.debugEnabled = saveDebug;
+        out.debugPath = fullfile(out.jobFolder, 'CAD_DEBUG_INCOMPLETE.aedt');
+        w = hfssVivaldiScript(out.scriptPath, out.statusPath, out.id, saveDebug);
         cleanup = onCleanup(w.abort); %#ok<NASGU>
         %% 1. Khởi tạo dự án HFSS mới bằng helper thư viện, không mở AEDT cũ
         bootstrap(w);
@@ -247,11 +250,13 @@ function buildGeometry(w, p, cfg)
     w.lib(@hfssSetWCS, {'Global'});
     w.stage('CHECK_02');
     hfssVivaldiExtensions(w, 'equation', 'EquationSurface1', 'L_flare');
-    w.require('HasName(ObjectNames(),"EquationSurface1")', 'Không có mặt loe dài');
+    w.call('sbObjects = QueryGroup("Sheets")', 'Đọc trực tiếp nhóm Sheets sau CreateEquationSurface1', 'QUERY');
+    w.require('HasName(sbObjects,"EquationSurface1")', 'Truy vấn Sheets thành công nhưng không có tên EquationSurface1');
     w.pass('CHECK_02', 'PENDING', 'Đã tạo mặt loe dài');
     w.stage('CHECK_03');
     hfssVivaldiExtensions(w, 'equation', 'EquationSurface2', 'slot_t_L');
-    w.require('HasName(ObjectNames(),"EquationSurface2")', 'Không có mặt loe ngắn');
+    w.call('sbObjects = QueryGroup("Sheets")', 'Đọc trực tiếp nhóm Sheets sau CreateEquationSurface2', 'QUERY');
+    w.require('HasName(sbObjects,"EquationSurface2")', 'Truy vấn Sheets thành công nhưng không có tên EquationSurface2');
     w.pass('CHECK_03', 'PENDING', 'Đã tạo mặt loe ngắn');
     %% 4. Clone trước khi trim; xoay transition quanh slot_t_td thay vì Global
     w.stage('CHECK_04');

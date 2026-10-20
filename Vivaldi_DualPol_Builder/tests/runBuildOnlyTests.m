@@ -32,13 +32,18 @@ assert(~isfile(first.projectPath) && ~isfile(second.projectPath));
 assert(isfolder(first.reservation) && isfolder(second.reservation));
 scripts = {first.scriptPath, second.scriptPath};
 text = fileread(first.scriptPath);
+% Không đếm bản sao lệnh trong literal chẩn đoán như thể là CAD thực thi lần hai.
+lines = regexp(text, '\r?\n', 'split');
+lines = lines(~cellfun(@(line)startsWith(strtrim(line), 'vCommand = '), lines));
+text = strjoin(lines, newline);
 assert(~isempty(strfind(text, 'oDesktop.NewProject')));
 assert(isempty(strfind(text, 'oDesktop.OpenProject')));
 assert(isempty(strfind(text, 'RestorePrevious')) && isempty(strfind(text, 'Rollback')));
 assert(isempty(strfind(text, 'oDesign.Analyze')) && isempty(strfind(text, 'oDesign.Solve')));
 checks{end + 1} = 'Hai build cấp hai tên mới, không copy/open nguồn và không tự solve';
 
-save = strfind(text, 'oProject.SaveAs');
+mainEnd = strfind(text, 'End Sub');
+save = strfind(text(1:mainEnd(1)), 'oProject.SaveAs');
 validate = strfind(text, 'oDesign.ValidateDesign() = 1');
 assert(numel(save) == 1 && numel(validate) == 1 && save > validate);
 assert(~isempty(strfind(text(save:end), 'false')));
@@ -128,10 +133,27 @@ assert(strcmp(fileread(existing), 'EXISTING_FILE_MUST_NOT_CHANGE'));
 scripts{end + 1} = collision.scriptPath;
 checks{end + 1} = 'File AEDT có sẵn không bị ghi đè hoặc thay byte';
 
+% Hồi quy lỗi 450: phân biệt lệnh tạo mặt, query lỗi và không tìm thấy tên.
+assert(~isempty(strfind(text, 'sbObjects = QueryGroup("Sheets")')));
+assert(~isempty(strfind(text, 'HasName(sbObjects,"EquationSurface1")')));
+assert(~isempty(strfind(text, 'HasName(sbObjects,"EquationSurface2")')));
+assert(isempty(strfind(text, 'HasName(ObjectNames(),"EquationSurface')));
+assert(~isempty(strfind(text, 'sbSource = Err.Source')));
+assert(~isempty(strfind(text, 'OperationFailed')));
+assert(~isempty(strfind(text, 'objects = QueryGroup(CStr(groupName))')));
+assert(isempty(strfind(text, 'Scripting.Dictionary')));
+assert(~isempty(strfind(text, 'vSaveDebug = False')));
+assert(~isempty(strfind(text, 'oProject.SaveAs vDebugPath, False')));
+assert(~isempty(strfind(text, 'DEBUG|SAVED_INCOMPLETE|')));
+for step = 1:18
+    assert(~isempty(strfind(text, sprintf('Stage "CHECK_%02d"', step))));
+end
+checks{end + 1} = 'Hồi quy 450: query Sheets riêng, không Dictionary, đủ checkpoint và log lệnh/lỗi';
+
 report = struct('status', 'PASS', 'runtime', version, 'count', numel(checks), ...
     'checks', {checks}, 'scripts', {scripts}, ...
     'scope', 'Công thức, helper sinh script, encoder và protocol fixture; không chạy CAD/HFSS.', ...
-    'MATLAB_GUI', 'PENDING', 'Windows_VBScript_compiler', 'PENDING', 'HFSS_CAD', 'PENDING', 'HFSS_solver', 'PENDING');
+    'MATLAB_GUI', 'PENDING', 'Windows_VBScript_compiler', 'PENDING', 'HFSS_CAD', 'PENDING', 'HFSS_solver', 'PENDING', 'Windows_query_fixtures', 'PENDING');
 fid = fopen(fullfile(folder, 'build-only-tests.json'), 'w', 'n', 'UTF-8');
 fprintf(fid, '%s\n', jsonencode(report)); fclose(fid);
 fprintf('PASS: %d nhóm kiểm tra; HFSS CAD/solver và GUI vẫn PENDING.\n', numel(checks));
