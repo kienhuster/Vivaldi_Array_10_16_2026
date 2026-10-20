@@ -1,0 +1,1911 @@
+# MASTER PROMPT V2 — VIVALDI DUAL-POL LIVE HFSS API DESIGNER PRO
+
+## FULL MATLAB IMPLEMENTATION • ANSYS HFSS 2021 R2 • DIRECT COM AUTOMATION • TRUE PARAMETRIC CAD • LIVE UPDATE
+
+---
+
+# PHẦN 1 — VAI TRÒ, MỤC TIÊU VÀ NGUYÊN TẮC BẮT BUỘC
+
+Bạn là một Senior RF/Microwave Antenna Engineer, chuyên gia MATLAB Application Development, Ansys Electronics Desktop/HFSS 2021 R2, COM Automation API, Parametric CAD, Boolean Geometry, Electromagnetic Simulation và Software Testing.
+
+Hãy sử dụng **mức suy luận cao nhất có sẵn** để nghiên cứu và triển khai dự án.
+
+Tôi yêu cầu bạn **trực tiếp xây dựng một phần mềm hoàn chỉnh bằng MATLAB**, không chỉ viết kế hoạch, mô tả lý thuyết, pseudocode hoặc tạo giao diện không có chức năng thực.
+
+Tên phần mềm:
+
+**Vivaldi Dual-Polarized Antenna — Live HFSS Designer Pro**
+
+Mục tiêu là tạo công cụ cho phép:
+
+1. Thiết kế một phần tử anten Vivaldi dual-polarized đúng theo mô hình HFSS gốc của tôi.
+2. Tùy chỉnh tự do tất cả các biến kích thước độc lập trong miền hình học hợp lệ.
+3. Tự động tính các biểu thức hình học phụ thuộc.
+4. Xem trước hình dạng anten trong MATLAB.
+5. Kết nối trực tiếp và duy trì kết nối với Ansys HFSS 2021 R2 bằng COM Automation API.
+6. Dựng toàn bộ anten 3D từ một HFSS Project trống.
+7. Mở một Working Project và chỉnh kích thước trực tiếp trong chính project đó.
+8. Không phải tạo project mới mỗi lần thay một kích thước.
+9. Giữ đúng lịch sử CAD, các phép Boolean, hai phần tử trực giao, coax, port và solver.
+10. Kiểm tra các phép dựng hình và phát hiện lỗi khi HFSS không cập nhật được.
+11. Chạy mô phỏng khi tôi chủ động yêu cầu.
+12. Xuất các kết quả mô phỏng thực tế.
+13. Lưu project khi cần.
+14. Bàn giao toàn bộ phần mềm và mã nguồn bằng một file ZIP tải trực tiếp.
+
+**Ưu tiên số một: hình học chính xác.**
+
+**Ưu tiên số hai: kết nối COM trực tiếp và Live Parametric Update.**
+
+**Ưu tiên số ba: tính ổn định, kiểm thử và khả năng chẩn đoán lỗi.**
+
+**Ưu tiên số bốn: giao diện đẹp, khoa học và dễ sử dụng.**
+
+Không được chỉ tập trung làm GUI trong khi bộ dựng hình HFSS vẫn sai.
+
+---
+
+# PHẦN 2 — REPOSITORY NGUỒN VÀ DỮ LIỆU THAM CHIẾU
+
+## 2.1. Repository chính
+
+Đọc repository:
+
+https://github.com/kienhuster/Vivaldi_Array_10_16_2026
+
+Repository chứa:
+
+1. `17_10_2026_vivaldi.aedt`
+2. `Phan_tich_chi_tiet_Vivaldi_dual_pol_17_10_2026.md`
+
+Đây là hai nguồn dữ liệu bắt buộc.
+
+File `.aedt` là mô hình hoàn chỉnh của **một phần tử anten Vivaldi dual-polarized**, không phải một mảng anten.
+
+Tài liệu Markdown phân tích các tham số, lịch sử dựng hình, vị trí đối tượng, hệ tọa độ, coax, excitation, boundary và solver.
+
+## 2.2. Hai ảnh HFSS thực tế
+
+Tôi cũng cung cấp hai ảnh chụp hình dạng anten HFSS của mình.
+
+**Đây là những ảnh chuẩn để đối chiếu hình dạng.**
+
+Phải sử dụng đúng các ảnh đó, kết hợp với file `.aedt`, để xác minh hình học.
+
+Không được thay bằng hình ảnh Vivaldi trên Internet.
+
+Nếu ảnh chưa có trong workspace Codex, sử dụng file `.aedt` làm nguồn hình học chính và ghi rõ chưa thể so sánh ảnh. Không được tự chọn một ảnh anten khác rồi coi là thiết kế của tôi.
+
+## 2.3. Design cần đọc
+
+Tên design:
+
+`dual_pol_vivaldi_patch_Wflare_20`
+
+Không nhầm với `HFSSDesign1` gần như rỗng.
+
+Solution Type:
+
+`DrivenModal`
+
+## 2.4. Thứ tự ưu tiên thông tin
+
+1. Dữ liệu thực tế trong `17_10_2026_vivaldi.aedt`.
+2. Thông số và lịch sử dựng hình được xác minh trong tài liệu `.md`.
+3. Hai ảnh HFSS thực tế để đối chiếu hình dạng.
+4. Tài liệu Automation API của Ansys HFSS 2021 R2.
+5. Thư viện mã nguồn tham khảo khác.
+
+Nếu nguồn khác nhau, không âm thầm chọn một nguồn rồi tiếp tục.
+
+Phải ghi rõ điểm khác biệt và cách giải quyết.
+
+---
+
+# PHẦN 3 — GITHUB CHỈ ĐƯỢC ĐỌC, KHÔNG ĐƯỢC GHI
+
+**TUYỆT ĐỐI KHÔNG ĐƯỢC UPLOAD SẢN PHẨM LÊN GITHUB.**
+
+Không thực hiện:
+
+- `git push`
+- `git commit` để bàn giao thay đổi.
+- Tạo branch trên repository từ xa.
+- Tạo Pull Request.
+- Merge Pull Request.
+- Sửa hoặc xóa file nguồn trên GitHub.
+- Upload ZIP lên GitHub.
+- Tạo repository mới để chứa kết quả.
+
+Được phép tải hoặc clone repository ở chế độ chỉ đọc vào workspace riêng.
+
+Mọi sản phẩm phải được tạo tại thư mục làm việc riêng, không chỉnh sửa bản nguồn.
+
+## 3.1. Cách bàn giao duy nhất
+
+Tạo folder:
+
+`Vivaldi_DualPol_Live_API_FINAL`
+
+Sau đó nén toàn bộ folder thành:
+
+**`Vivaldi_DualPol_Live_API_FINAL.zip`**
+
+ZIP phải chứa:
+
+- MATLAB GUI chính.
+- Toàn bộ source code.
+- Các module COM Automation.
+- Các module hình học.
+- Các module solver.
+- Các bài kiểm thử.
+- Tài liệu tiếng Việt.
+- Tài liệu kỹ thuật.
+- Mã chẩn đoán lỗi.
+- Các dữ liệu tham chiếu cần thiết và được phép phân phối.
+
+Cung cấp trực tiếp ZIP để tôi tải xuống máy Windows.
+
+Không được bàn giao bằng cách yêu cầu tôi tự tạo từng file `.m` từ các đoạn code trong câu trả lời.
+
+Không được tuyên bố tạo ZIP thành công khi file thực tế chưa tồn tại.
+
+---
+
+# PHẦN 4 — KIẾN TRÚC CHÍNH: MATLAB KẾT NỐI TRỰC TIẾP HFSS BẰNG COM API
+
+## 4.1. Kiến trúc bắt buộc
+
+Sử dụng:
+
+**MATLAB GUI ↔ Persistent COM Automation ↔ Ansys HFSS 2021 R2**
+
+MATLAB là ứng dụng chính.
+
+HFSS là môi trường dựng CAD và giải điện từ.
+
+MATLAB phải sử dụng COM Automation trên Windows để truy cập:
+
+- Electronics Desktop Application.
+- Desktop Object.
+- Project Object.
+- Design Object.
+- 3D Modeler Editor.
+- BoundarySetup Module.
+- AnalysisSetup Module.
+- Solutions Module.
+- ReportSetup Module.
+- Các module cần thiết khác.
+
+## 4.2. Cơ chế kết nối
+
+Nghiên cứu và triển khai:
+
+- `actxGetRunningServer`
+- `actxserver`
+- `invoke`
+- `get`
+- Các phương thức COM MATLAB cần thiết.
+
+Kiểm tra ProgID thực tế của Ansys được cài trên Windows.
+
+Không tự khẳng định ProgID nào chắc chắn hoạt động trên mọi phiên bản HFSS.
+
+Phải có cơ chế kiểm tra và thông báo nếu ProgID chưa được đăng ký.
+
+## 4.3. Persistent COM Session
+
+Khi nhấn Connect HFSS:
+
+1. Tìm phiên Ansys Electronics Desktop đang chạy.
+2. Ưu tiên kết nối với phiên có sẵn nếu đúng yêu cầu.
+3. Nếu không có, hỗ trợ khởi tạo phiên mới bằng cơ chế hợp lệ.
+4. Lấy Desktop object.
+5. Lấy Project object.
+6. Lấy đúng HFSS Design.
+7. Lấy 3D Modeler Editor.
+8. Lưu các COM handles trong trạng thái ứng dụng.
+9. Theo dõi phiên kết nối.
+10. Duy trì kết nối cho các thao tác tiếp theo.
+
+Không tạo lại đối tượng COM không cần thiết mỗi lần nhấn Update.
+
+Nếu HFSS bị đóng hoặc COM handle mất hiệu lực, MATLAB phải thông báo và hỗ trợ Reconnect.
+
+## 4.4. Không sử dụng VBScript làm cơ chế chính
+
+Repository tham khảo:
+
+https://github.com/yuip/hfss-api/
+
+Thư viện này chủ yếu dùng MATLAB để sinh VBScript rồi yêu cầu HFSS thực thi.
+
+Tôi **không muốn sử dụng cơ chế đó làm phương pháp chính**.
+
+Phần mềm mới phải ưu tiên các lời gọi Automation API trực tiếp từ MATLAB.
+
+Đặc biệt:
+
+- Không ghi hàng loạt `fprintf` để tạo file `.vbs` rồi chạy mỗi lần cập nhật.
+- Không yêu cầu đóng/mở project để cập nhật một biến.
+- Không dùng `/RunScript` làm phương thức chính của nút Update Geometry.
+- Không âm thầm chuyển sang VBScript khi Direct COM lỗi rồi tuyên bố Live API đã hoạt động.
+
+Có thể nghiên cứu cú pháp Automation từ thư viện tham khảo.
+
+Nếu một lời gọi HFSS không thể thực hiện qua MATLAB COM do giới hạn VARIANT/SAFEARRAY, phải ghi nhận và giải thích chính xác.
+
+Một giải pháp dự phòng bằng script chỉ được trình bày rõ ràng là phương án khác, không được ngụy trang thành Direct COM.
+
+---
+
+# PHẦN 5 — KIỂM CHỨNG COM API TRƯỚC KHI VIẾT TOÀN BỘ BUILDER
+
+Trước khi triển khai các phép dựng hình phức tạp, phải tạo một **COM Compatibility Test** độc lập.
+
+## 5.1. Bài kiểm tra cơ bản
+
+Trên môi trường Windows có MATLAB và Ansys HFSS:
+
+1. Kết nối Electronics Desktop.
+2. Lấy Desktop Object.
+3. Tạo một project thử nghiệm mới.
+4. Insert một DrivenModal Design.
+5. Lấy 3D Modeler Editor.
+6. Tạo một Rectangle hoặc Box đơn giản qua COM.
+7. Truy vấn lại tên đối tượng.
+8. Tạo một design variable.
+9. Thay đổi variable qua COM.
+10. Kiểm tra hình học hoặc thuộc tính được cập nhật.
+11. Lưu project thử.
+12. Đóng project thử mà không ảnh hưởng project nguồn.
+
+Bài kiểm tra phải có log và thông báo lỗi chi tiết.
+
+## 5.2. Nested SAFEARRAY / VARIANT
+
+Nhiều HFSS Automation methods nhận tham số dưới dạng các mảng lồng nhau.
+
+Phải kiểm chứng cách MATLAB truyền:
+
+- Cell arrays.
+- VARIANT-compatible arrays.
+- String arrays.
+- Numeric values.
+- Nested arguments.
+
+Không được chỉ viết các lời gọi COM theo cú pháp phỏng đoán.
+
+Nếu một phương thức yêu cầu cấu trúc dữ liệu không truyền được bằng cơ chế đã chọn, phải thử giải pháp COM hợp lệ khác và ghi kết quả.
+
+## 5.3. Điều kiện kết luận
+
+Chỉ báo `Direct COM Verified` khi đã thực sự chạy thành công các bài test liên quan trên Ansys.
+
+Nếu môi trường Codex không có Windows, MATLAB hoặc Ansys:
+
+- Viết mã kiểm thử.
+- Kiểm tra tĩnh tối đa.
+- Ghi trạng thái `PENDING — requires Windows MATLAB + HFSS`.
+- Không tuyên bố Direct COM đã được xác nhận.
+
+Không để việc thiếu Ansys ngăn cản hoàn thành những module độc lập có thể xây dựng.
+
+---
+
+# PHẦN 6 — QUẢN LÝ MỘT HFSS WORKING PROJECT
+
+Đây là yêu cầu đặc biệt quan trọng.
+
+Tôi muốn có thể **thay kích thước anten nhiều lần trong cùng một HFSS Project**.
+
+Không tạo một file mới mỗi lần thay thông số.
+
+## 6.1. Reference Project
+
+File gốc:
+
+`17_10_2026_vivaldi.aedt`
+
+Phải được bảo vệ, không ghi đè.
+
+## 6.2. Working Project
+
+Tạo một bản làm việc riêng:
+
+`Vivaldi_DualPol_Working.aedt`
+
+Đây là project được MATLAB điều khiển và cập nhật liên tục.
+
+Có thể tạo nó bằng cách sao chép an toàn project nguồn hoặc dựng mới hoàn toàn bằng Direct COM.
+
+Hai cách phải được phân biệt rõ ràng.
+
+## 6.3. Hai chế độ vận hành bắt buộc
+
+### Mode A — Build From Scratch
+
+MATLAB tạo một HFSS Project trống.
+
+Sau đó dùng COM API để dựng:
+
+- Variables.
+- Coordinate Systems.
+- EquationSurfaces.
+- Transition.
+- Slot.
+- Cavity.
+- Main Metal Body.
+- Dual Polarization.
+- Coaxial Feeds.
+- Lumped Ports.
+- Radiation Boundary.
+- Driven Modal Setup.
+- Frequency Sweep.
+- Far Field Setup.
+
+Chế độ này không được sao chép nguyên CAD từ file nguồn rồi tuyên bố đã dựng từ đầu.
+
+### Mode B — Attach & Live Update
+
+MATLAB mở hoặc kết nối một Working Project đã tồn tại.
+
+Người dùng chỉnh các biến kích thước trong GUI.
+
+MATLAB cập nhật các design variables trong cùng HFSS Design.
+
+HFSS tái tính các đối tượng phụ thuộc.
+
+Không gọi `NewProject` hoặc `InsertDesign` mỗi lần nhấn Update.
+
+Không tự sinh thêm project mới.
+
+## 6.4. Save và Save As
+
+Phải có:
+
+- Save Working Project.
+- Save As New Version.
+- Restore Last Valid Parameters.
+- Reload Last Saved Version.
+
+Chỉ tạo thêm file `.aedt` khi tôi chủ động chọn Save As, hoặc khi cần backup phục hồi có thông báo rõ ràng.
+
+## 6.5. Cơ chế phục hồi khi Update lỗi
+
+Trước khi thay đổi lớn:
+
+- Ghi nhận bộ tham số hợp lệ hiện tại.
+- Xác định trạng thái lưu gần nhất.
+- Thực hiện Update trong điều kiện kiểm soát.
+- Kiểm tra các phép Boolean và geometry.
+
+Nếu lỗi:
+
+- Không tự lưu mô hình lỗi.
+- Cố gắng phục hồi bộ biến trước đó.
+- Validate lại sau khi phục hồi.
+- Nếu phục hồi không thành công, hướng dẫn mở bản lưu hoặc backup an toàn.
+- Không báo `Update Successful`.
+
+Không giả định COM Automation có transaction nguyên tử nếu HFSS không hỗ trợ.
+
+---
+
+# PHẦN 7 — THIẾT KẾ THAM SỐ HOÀN TOÀN TÙY CHỈNH
+
+## 7.1. Không giới hạn vào preset
+
+**Không được giới hạn kích thước chỉ ở một vài giá trị cố định.**
+
+Tôi muốn nhập các giá trị thực bất kỳ trong miền thiết kế hợp lệ.
+
+Ví dụ:
+
+- L_flare_1 = 37.628 mm.
+- L_flare_1 = 58.375 mm.
+- L_flare_1 = 90 mm.
+- aperture_w = 25.74 mm.
+- slot_feed_w = 0.635 mm.
+- cavity_w = 1.825 mm.
+- cavity_L = 6.35 mm.
+- thickness = 2.45 mm.
+- deg_slot_t = 24.75°.
+
+Đây chỉ là ví dụ, không phải những lựa chọn cố định của GUI.
+
+## 7.2. Biến độc lập và biến dẫn xuất
+
+Phải phân loại toàn bộ design variables trong file HFSS thành:
+
+**Independent Parameters:** người dùng được phép nhập trực tiếp.
+
+**Derived Parameters:** tính từ các biến khác bằng biểu thức phụ thuộc.
+
+Không cho người dùng sửa trực tiếp biến dẫn xuất nếu việc sửa đó phá vỡ hệ thống tham số.
+
+## 7.3. Những biến người dùng cần điều chỉnh
+
+### Flare Geometry
+
+- `L_flare_1`
+- `aperture_w`
+- `slot_feed_w`
+
+### Transition
+
+- `slot_t_L` hoặc các thành phần độc lập của biểu thức này.
+- `them`
+- `deg_slot_t`
+
+### Cavity và Feed
+
+- `h3_slot_feed`
+- `h2`
+- `cavity_w`
+- `cavity_L`
+- `positionx`
+
+### Metal Geometry
+
+- `thickness`
+- `h_de`
+
+### Coaxial Geometry
+
+- `r_cabin`
+- `r_cabmid`
+- `r_cabout`
+
+Phải nghiên cứu `.aedt` để xác định những biến thiết kế độc lập khác có thể bổ sung.
+
+Tạo phần Advanced Parameters để quản lý chúng.
+
+## 7.4. Numeric Input
+
+Mỗi biến có ô nhập numeric.
+
+Cho phép nhập số thập phân với độ chính xác cần thiết.
+
+Không làm tròn giá trị trước khi đưa vào biểu thức HFSS.
+
+Nếu có Slider:
+
+- Slider chỉ giúp chỉnh nhanh.
+- Numeric Input mới quyết định giá trị.
+- Không giới hạn người dùng trong miền Slider ban đầu.
+- Có thể điều chỉnh miền Slider khi cần.
+
+## 7.5. Dynamic Validation
+
+Không có nghĩa mọi giá trị dương đều tạo được anten hợp lệ.
+
+Phải kiểm tra:
+
+- Các chiều dài và bán kính vật lý hợp lệ.
+- `aperture_w > slot_feed_w > 0`.
+- `r_cabout > r_cabmid > r_cabin > 0`.
+- Transition không gây hình học suy biến.
+- Cavity không làm hỏng vùng kim loại ngoài ý muốn.
+- Các khối kim loại tiếp xúc như mô hình gốc.
+- Coax không xuyên sai vào thân kim loại.
+- Port còn nằm đúng tiết diện.
+- Các hệ tọa độ và phép Boolean vẫn hợp lệ.
+
+Đối với ràng buộc không thể xác minh trước bằng công thức, phải đánh dấu cần kiểm tra HFSS.
+
+Không tự đặt min/max tùy tiện rồi giới hạn thiết kế.
+
+Phải hiển thị lý do cụ thể khi một cấu hình không hợp lệ.
+
+---
+
+# PHẦN 8 — CÔNG THỨC HÌNH HỌC CHUẨN
+
+## 8.1. Default Parameters
+
+| Variable | Default |
+|---|---|
+| L_flare_1 | 40 mm |
+| slot_t_L | 6.4 mm + them |
+| them | 0 mm |
+| aperture_w | 20 mm |
+| slot_feed_w | 0.5 mm |
+| deg_slot_t | 21 deg |
+| h3_slot_feed | 1 mm |
+| h2 | 2.6 mm |
+| cavity_w | 1.4 mm |
+| cavity_L | 5 mm |
+| thickness | 2 mm |
+| h_de | 2 mm |
+| r_cabin | 0.15 mm |
+| r_cabmid | 0.35 mm |
+| r_cabout | 0.5 mm |
+| positionx | 0.15 mm |
+
+## 8.2. Công thức
+
+`L_flare = L_flare_1 + slot_t_L`
+
+`r_flare = ln(aperture_w/slot_feed_w)/L_flare`
+
+`z_feed = ((slot_feed_w/2)*exp(slot_t_L*r_flare)+slot_feed_w/2)*sin(deg_slot_t) + slot_t_L*(1-cos(deg_slot_t))`
+
+`x_feed = ((slot_feed_w/2)*exp(slot_t_L*r_flare)+slot_feed_w/2)*cos(deg_slot_t) + slot_t_L*sin(deg_slot_t) - (slot_feed_w/2)*exp(slot_t_L*r_flare)`
+
+`L_patch = L_flare_1 + slot_t_L - z_feed + h3_slot_feed + slot_feed_w + h_de`
+
+`de_L = aperture_w + thickness`
+
+`de_W = aperture_w + thickness`
+
+`h_cabin = h_de + slot_feed_w`
+
+`h_cabout = h_cabin - slot_feed_w`
+
+`h_cabmid = h_cabin - slot_feed_w`
+
+Phải dùng lượng giác theo độ.
+
+## 8.3. Kết quả mặc định
+
+- L_flare = 46.4 mm.
+- r_flare ≈ 0.0795017124 mm^-1.
+- x_feed ≈ 2.499330861 mm.
+- z_feed ≈ 0.663696710 mm.
+- L_patch ≈ 49.236303290 mm.
+- de_L = de_W = 22 mm.
+- h_cabin = 2.5 mm.
+
+Tạo unit tests để kiểm tra.
+
+Không dùng các số đã tính làm hằng số cố định khi người dùng thay tham số.
+
+## 8.4. Dependency Graph
+
+Phải xây dựng quan hệ phụ thuộc giữa:
+
+- Independent Parameters.
+- Derived Parameters.
+- Coordinate Systems.
+- Equation Surfaces.
+- Slot/Cavity.
+- Metal Sheets.
+- Coax.
+- Ports.
+- Base.
+- Solver/Region khi cần.
+
+Khi một biến độc lập thay đổi, tất cả đối tượng phụ thuộc phải được cập nhật đúng.
+
+---
+
+# PHẦN 9 — TÙY CHỈNH CHIỀU DÀI TỔNG L_PATCH
+
+Không chỉ hỗ trợ mục tiêu 49 mm và 50 mm.
+
+Tạo chức năng:
+
+**Target Antenna Length**
+
+Người dùng có thể nhập một chiều dài tổng bất kỳ trong miền hợp lệ, ví dụ:
+
+`L_patch_target = 57.35 mm`
+
+MATLAB phải giải ngược công thức để tìm `L_flare_1` thích hợp.
+
+Dùng thuật toán nghiệm số như `fzero` hoặc phương pháp phù hợp.
+
+Phải:
+
+1. Xác định miền nghiệm hợp lệ.
+2. Kiểm tra giá trị mục tiêu.
+3. Tìm nghiệm.
+4. Kiểm tra sai số.
+5. Cập nhật toàn bộ geometry.
+6. Thông báo nếu không tồn tại nghiệm hợp lệ.
+
+Không hard-code đáp án của các mục tiêu 49 hoặc 50 mm.
+
+Khi nhập chiều dài tổng, phải phân biệt với chiều dài flare.
+
+---
+
+# PHẦN 10 — DỰNG ĐÚNG HỆ TỌA ĐỘ HFSS
+
+Mô hình sử dụng nhiều Coordinate Systems.
+
+Phải giữ đúng Parent CS và hướng trục.
+
+## 10.1. Global
+
+Origin:
+
+(0,0,0)
+
+## 10.2. slot_t_td
+
+Parent: Global.
+
+Gốc Global mặc định:
+
+(0.415828068, 0, 6.4) mm.
+
+Dùng làm trục tham chiếu xoay transition.
+
+## 10.3. slot_feed_td
+
+Parent: Global.
+
+Gốc Global:
+
+(-2.499330861, 0, 0.663696710) mm.
+
+Dùng dựng khe, cavity, coax.
+
+## 10.4. patch_td
+
+Parent: Global.
+
+Gốc Global:
+
+(10,0,46.4) mm.
+
+Dùng tạo tấm Vivaldi thứ nhất.
+
+## 10.5. RelativeCS1
+
+Parent:
+
+`patch_td`
+
+Gốc Global:
+
+(10,-1,46.4) mm.
+
+Dùng để Duplicate phân cực thứ hai và dựng Box1.
+
+## 10.6. Nguyên tắc bắt buộc
+
+Các tọa độ mặc định chỉ là dữ liệu kiểm chứng.
+
+Trong ứng dụng thật phải dùng biểu thức tham số.
+
+Không hard-code toàn bộ vị trí theo cấu hình 40 mm.
+
+Phải phân biệt:
+
+- Global coordinates.
+- Local coordinates.
+- Parent coordinate system.
+- Object coordinate system.
+- Working coordinate system.
+
+Kiểm tra phép biến đổi local-to-global và global-to-local.
+
+Không bỏ qua hệ tọa độ khi gọi COM API.
+
+---
+
+# PHẦN 11 — QUY TRÌNH DỰNG HÌNH HFSS CHÍNH XÁC
+
+Đây là phần quan trọng nhất.
+
+Phải tái dựng **đúng hình dạng anten trong file `.aedt`**, không phải một anten Vivaldi đại diện.
+
+## STEP 01 — Create EquationSurface1
+
+Tạo HFSS EquationBasedSurface thật.
+
+Tên:
+
+`EquationSurface1`
+
+Phương trình:
+
+`x(u,v) = v*(slot_feed_w/2)*exp(u*r_flare)`
+
+`y(u,v) = 0`
+
+`z(u,v) = u`
+
+Giới hạn:
+
+`u = 0..L_flare`
+
+`v = -1..1`
+
+Mặt này tạo vùng flare dài.
+
+Dùng COM API với cấu trúc tham số được xác minh cho HFSS 2021 R2.
+
+Không thay bằng một đa giác ít điểm nếu không có lý do kỹ thuật được chứng minh và người dùng chấp thuận.
+
+## STEP 02 — Create EquationSurface2
+
+Tạo:
+
+`EquationSurface2`
+
+Cùng phương trình nhưng:
+
+`u = 0..slot_t_L`
+
+`v = -1..1`
+
+Đây là vùng flare ngắn.
+
+## STEP 03 — Clone & Subtract
+
+Tạo:
+
+`EquationSurface2_1`
+
+từ EquationSurface2.
+
+Dùng EquationSurface2_1 làm cutter trừ đoạn đầu khỏi EquationSurface1.
+
+Giữ lại EquationSurface2 nguyên bản.
+
+Xác minh:
+
+- Main flare không bị xóa.
+- Đoạn đầu thực sự được loại bỏ.
+- EquationSurface2 vẫn tồn tại để Rotate.
+
+## STEP 04 — Rotate Transition
+
+Xoay EquationSurface2 gốc:
+
+- Axis Y.
+- Angle `deg_slot_t`.
+- Default 21°.
+- Rotation reference `slot_t_td`.
+
+Không xoay quanh Global origin.
+
+Với cấu hình mặc định, đối chiếu các tọa độ sau biến đổi của hai mép đầu xấp xỉ:
+
+- (-2.499331, 0.663697) mm trong mặt XZ.
+- (-2.032541, 0.484513) mm trong mặt XZ.
+
+Không dùng các tọa độ này để hard-code phép xoay.
+
+Chúng chỉ dùng làm kiểm tra.
+
+## STEP 05 — Create Rectangle1
+
+Reference CS:
+
+`slot_feed_td`
+
+Normal Axis:
+
+Y.
+
+Các tham số local theo nguồn:
+
+- XStart = 0.
+- ZStart = 0.
+- Width = -h3_slot_feed.
+- Height = slot_feed_w.
+
+## STEP 06 — Create Rectangle2
+
+Cùng CS và normal Y.
+
+- XStart = 0.
+- ZStart = -h3_slot_feed.
+- Width = -slot_feed_w.
+- Height = slot_feed_w + h2 + cavity_w.
+
+## STEP 07 — Create Rectangle3
+
+- XStart = slot_feed_w + h2.
+- ZStart = -h3_slot_feed - slot_feed_w.
+- Width = cavity_L.
+- Height = cavity_w.
+
+**Đặc biệt:** Phải xác minh cách HFSS ánh xạ Width và Height với `WhichAxis='Y'`.
+
+Không được tự giả định Width theo X hoặc Height theo Z nếu điều đó không đúng với CAD gốc.
+
+## STEP 08 — Unite Cutter
+
+Unite các đối tượng:
+
+- EquationSurface1 sau Subtract.
+- EquationSurface2 đã Rotate.
+- Rectangle1.
+- Rectangle2.
+- Rectangle3.
+
+Kết quả là vùng khoét tổng hợp.
+
+Phải có:
+
+- Main flare.
+- Transition.
+- Feed slot.
+- Cavity.
+
+Trước khi tiếp tục, kiểm tra vùng khoét hợp lệ.
+
+Nếu Unite lỗi, dừng.
+
+## STEP 09 — Create Vivaldi_1 Sheet
+
+Tạo Rectangle trong:
+
+`patch_td`
+
+Tên:
+
+`Vivaldi_1`
+
+Thông số:
+
+- Normal Axis: Y.
+- XStart = 0.
+- YStart = 0.
+- ZStart = 0.
+- Width = -L_patch.
+- Height = -aperture_w.
+
+Mặc định bounding box:
+
+- X: -10..10 mm.
+- Y: 0.
+- Z: -2.836303..46.4 mm.
+
+## STEP 10 — Subtract Flare/Cavity
+
+Blank:
+
+`Vivaldi_1`
+
+Tool:
+
+vùng cutter đã Unite.
+
+Đây là thao tác quan trọng nhất.
+
+**Sau Subtract, tấm Vivaldi_1 phải có vùng flare rỗng thực sự.**
+
+Không được chỉ còn một Rectangle kim loại đặc.
+
+Phải kiểm tra:
+
+- Vùng flare hiện rõ.
+- Đoạn transition còn đúng.
+- Slot và cavity được khoét.
+- Kim loại hai bên vẫn tồn tại.
+- Không có cutter dư bất thường.
+- Không có lỗi sheet topology.
+
+Không tiếp tục nếu không xác nhận được kết quả.
+
+## STEP 11 — SheetThicken
+
+Sau khi khoét thành công:
+
+- Thickness = `thickness`.
+- BothSides = true.
+
+Mặc định:
+
+2 mm.
+
+Tấm đầu có bề dày đối xứng quanh Y=0:
+
+Y khoảng -1..1 mm.
+
+Kiểm tra vùng flare còn rỗng sau SheetThicken.
+
+Không dùng Box đặc để thay sheet đã khoét.
+
+## STEP 12 — Duplicate Dual Polarization
+
+Từ Vivaldi_1 đã thicken:
+
+`DuplicateAroundAxis`
+
+- Reference CS: RelativeCS1.
+- Axis: Z.
+- Angle: -90°.
+- NumClones: 2 theo dữ liệu nguồn.
+
+Kiểm tra ý nghĩa số lượng bản sao trong API.
+
+Tạo phần tử:
+
+`Vivaldi_2`
+
+Sau đó Move:
+
+- X = 0.
+- Y = thickness.
+- Z = 0.
+
+Theo đúng hệ tọa độ được lưu trong file nguồn.
+
+Kiểm tra cả hai tấm đều có flare và vuông góc 90°.
+
+## STEP 13 — Create Box1
+
+Reference CS:
+
+`RelativeCS1`
+
+Thông số:
+
+- XPosition = 0.
+- YPosition = 0.
+- ZPosition = 0.
+- XSize = thickness.
+- YSize = thickness.
+- ZSize = -L_patch.
+
+Mặc định tiết diện 2 × 2 mm.
+
+## STEP 14 — Create De Base
+
+Trong Global:
+
+- XPosition = (de_L+thickness)/2.
+- YPosition = -(de_W-aperture_w)/2.
+- ZPosition = z_feed-h3_slot_feed-slot_feed_w.
+- XSize = -de_L.
+- YSize = de_W.
+- ZSize = -h_de.
+
+Mặc định:
+
+22 × 22 × 2 mm.
+
+## STEP 15 — Unite Main Metal
+
+Unite:
+
+- Vivaldi_1.
+- Vivaldi_2.
+- Box1.
+- De.
+
+Result:
+
+một thân kim loại chính, tên phù hợp với file gốc.
+
+Material:
+
+aluminum.
+
+Sau Unite, phải kiểm tra:
+
+- Hai nhánh kim loại còn tồn tại.
+- Hai vùng flare còn rỗng.
+- Khối nối đúng.
+- Đế đúng.
+- Không có vùng giao sai.
+- Không có lỗi Boolean.
+
+Bản thứ hai có thể không còn xuất hiện riêng trong top-level object tree vì đã Unite. Không được nhầm với mất phân cực thứ hai.
+
+## STEP 16 — Create First Coax
+
+Dùng CS:
+
+`slot_feed_td`
+
+### Inner conductor
+
+Tên:
+
+`cable_in`
+
+- Cylinder.
+- Axis Z.
+- Radius r_cabin.
+- XCenter = -positionx + slot_feed_w + h2.
+- YCenter = 0.
+- ZCenter = -h3_slot_feed.
+- Height = -h_cabin.
+- Material copper.
+
+### Outer conductor
+
+Tên:
+
+`cable_out`
+
+- Radius r_cabout.
+- XCenter = -positionx + h2 + slot_feed_w.
+- YCenter = 0.
+- ZCenter = -h3_slot_feed - slot_feed_w.
+- Height = -h_cabout.
+- Material copper.
+
+### Middle cutter
+
+Tạo `cable_mid` bán kính r_cabmid.
+
+Dùng nó để khoét phần trong của cable_out.
+
+Outer conductor phải là ống rỗng.
+
+## STEP 17 — Create Second Coax
+
+Tạo coax thứ hai theo phép biến đổi của phần tử phân cực thứ hai.
+
+Dùng DuplicateAroundAxis với:
+
+- RelativeCS1.
+- Axis Z.
+- Angle -90°.
+
+Sau đó Move theo đúng dữ liệu gốc.
+
+Tạo các đối tượng:
+
+- cable_in_1.
+- cable_out_1.
+- Các operand tương ứng.
+
+Không tự đặt coax thứ hai bằng tọa độ ước lượng.
+
+## STEP 18 — Subtract Coax Cutters
+
+Theo mô hình nguồn, tạo sáu cutter tương ứng với:
+
+- Hai inner conductor regions.
+- Hai middle cutter regions.
+- Hai outer conductor regions.
+
+Subtract khỏi thân nhôm đã Unite.
+
+KeepOriginals phải phù hợp dữ liệu nguồn.
+
+Giữ những thành phần coax cần thiết.
+
+Kiểm tra:
+
+- Hai đường cấp nguồn đúng vị trí.
+- Không có giao hình sai.
+- Không mất inner conductors.
+- Không mất outer conductors.
+- Không làm hỏng flare/cavity.
+
+## STEP 19 — Port1
+
+Tạo circular port sheet.
+
+Bán kính tham chiếu:
+
+0.35 mm.
+
+Vị trí mặc định của tâm port1 xấp xỉ:
+
+(0.450669,0,-2.836303) mm.
+
+Gán Lumped Port 50 Ω.
+
+Kiểm tra Integration Line.
+
+## STEP 20 — Port2
+
+Tạo port thứ hai bằng phép biến đổi tương ứng.
+
+Tâm port2 mặc định xấp xỉ:
+
+(11,10.549331,-2.836303) mm.
+
+Gán Lumped Port 50 Ω.
+
+Kiểm tra Integration Line.
+
+Không hard-code Edge IDs từ project cũ.
+
+Port phải tiếp xúc đúng với cấu trúc coax.
+
+---
+
+# PHẦN 12 — GEOMETRY VALIDATION VÀ DEBUG STEP-BY-STEP
+
+Phải thiết kế bộ chẩn đoán riêng.
+
+Lỗi nghiêm trọng trước đây:
+
+**Hai tấm nhôm đặc, không có hình khoét Vivaldi.**
+
+Bộ builder mới phải phát hiện tình trạng này.
+
+## 12.1. Checkpoints bắt buộc
+
+- CHECK_01: Coordinate Systems.
+- CHECK_02: EquationSurface1.
+- CHECK_03: EquationSurface2.
+- CHECK_04: Clone and Subtract.
+- CHECK_05: Transition Rotation.
+- CHECK_06: Slot/Cavity Rectangles.
+- CHECK_07: Unite Cutter.
+- CHECK_08: Main Vivaldi Subtract.
+- CHECK_09: SheetThicken.
+- CHECK_10: Duplicate Dual-Pol.
+- CHECK_11: Base and Bridge.
+- CHECK_12: Main Unite.
+- CHECK_13: First Coax.
+- CHECK_14: Second Coax.
+- CHECK_15: Coax Subtract.
+- CHECK_16: Ports.
+- CHECK_17: Radiation.
+- CHECK_18: Solver Setup.
+
+Mỗi checkpoint lưu:
+
+- Step name.
+- Object names.
+- Parameters.
+- Execution status.
+- Geometry validation status.
+- Error message.
+- Timestamp.
+- Project path.
+
+## 12.2. Geometry Validation
+
+Không chỉ kiểm tra tên đối tượng tồn tại.
+
+Phải kiểm tra vùng rỗng thật nếu API hỗ trợ.
+
+Có thể dùng:
+
+- Edge topology.
+- Face geometry.
+- Surface area.
+- Section geometry.
+- Point-in-solid hoặc giao hình có kiểm soát.
+- Các phương pháp CAD validation được HFSS hỗ trợ.
+
+Đối với flare mặc định, kiểm tra các cao độ phù hợp như:
+
+- Z = 10 mm.
+- Z = 25 mm.
+- Z = 40 mm.
+
+Xác minh vùng giữa khe loe rỗng trong khi các phần kim loại hai bên vẫn tồn tại.
+
+Làm tương tự đối với tấm thứ hai sau Duplicate.
+
+Bounding box không đủ để chứng minh điều này.
+
+## 12.3. Diagnostic Status
+
+Chỉ sử dụng:
+
+- PASS.
+- FAIL.
+- PENDING.
+- UNSUPPORTED.
+
+Không được đánh dấu PASS nếu chưa chạy phép kiểm tra thật.
+
+## 12.4. Debug Mode
+
+Trong GUI có nút:
+
+`Debug Build Step-by-Step`
+
+Cho phép:
+
+- Dừng tại checkpoint.
+- Xem object tree.
+- Xem lỗi COM.
+- Xem lỗi Boolean.
+- Hiển thị giai đoạn hình học.
+- Lưu dữ liệu chẩn đoán.
+- Xuất ảnh từ HFSS nếu API hỗ trợ.
+
+Không tạo ảnh giả rồi gọi đó là ảnh chụp HFSS.
+
+---
+
+# PHẦN 13 — HFSS SOLVER SETUP
+
+Sau khi hình học hợp lệ mới tạo đầy đủ solver.
+
+## 13.1. Materials
+
+- Vivaldi Main Body: aluminum.
+- Coax Inner: copper.
+- Coax Outer: copper.
+- Port Sheets: vacuum.
+
+Kiểm tra SolveInside theo mô hình gốc.
+
+Không tự thêm FR4, Rogers hoặc PTFE nếu không có trong file nguồn.
+
+## 13.2. Radiation Boundary
+
+Tạo Region thích hợp.
+
+Padding mặc định:
+
+20 mm mỗi hướng.
+
+Boundary:
+
+`Open1`
+
+Type:
+
+Radiation.
+
+Giữ region tách khỏi thân kim loại.
+
+## 13.3. Driven Modal Setup
+
+Solution Type:
+
+DrivenModal.
+
+Adaptive Setup:
+
+- Frequency: 5 GHz.
+- MaxDeltaS: 0.02.
+- Minimum Passes: 5.
+- Maximum Passes: 50.
+
+Các tùy chọn còn lại đối chiếu file AEDT.
+
+## 13.4. Frequency Sweep
+
+- Start: 5 GHz.
+- Stop: 20 GHz.
+- Step: 0.25 GHz.
+- Sweep Type: Discrete.
+- Save Fields theo cấu hình nguồn.
+
+Cho phép thay đổi dải tần mô phỏng trong GUI.
+
+Dải mặc định giữ đúng file nguồn.
+
+## 13.5. Excitations
+
+Mặc định:
+
+- Port1: 1 W, 0°.
+- Port2: 0 W, 0°.
+
+Cho phép chọn:
+
+- Excite Port1.
+- Excite Port2.
+- Custom Excitation.
+
+Không tự cấp cả hai port với 1 W khi người dùng chưa yêu cầu.
+
+## 13.6. Far Field
+
+Tạo:
+
+- 3D Pattern.
+- Elevation.
+- Azimuth.
+
+Array mode:
+
+NoArray.
+
+## 13.7. Run Simulation
+
+Phải có nút riêng:
+
+`RUN SIMULATION`
+
+Không tự AnalyzeAll khi người dùng thay đổi một kích thước.
+
+Sau khi Update Geometry, kết quả mô phỏng cũ có thể không còn phù hợp và phải được đánh dấu là stale nếu dữ liệu chưa được giải lại.
+
+---
+
+# PHẦN 14 — XỬ LÝ VÀ HIỂN THỊ KẾT QUẢ
+
+Chỉ hiển thị kết quả mô phỏng thật từ HFSS.
+
+Các đại lượng:
+
+- S11.
+- S22.
+- S21.
+- S12.
+- VSWR.
+- Input impedance nếu dữ liệu đủ.
+- Realized Gain.
+- Radiation Pattern 2D.
+- Radiation Pattern 3D nếu hỗ trợ nhập và hiển thị.
+- Efficiency khi HFSS xuất được dữ liệu.
+- HPBW khi có dữ liệu mẫu phù hợp.
+
+Các đồ thị phải ghi đơn vị chính xác.
+
+Không sinh dữ liệu giả để làm đẹp GUI.
+
+Không sử dụng số liệu mô phỏng cũ cho hình học mới mà không thông báo.
+
+Có thể import CSV từ HFSS.
+
+Trạng thái khi chưa giải:
+
+`NOT SIMULATED`
+
+Trạng thái khi dữ liệu cũ không còn đúng:
+
+`RESULTS OUTDATED — RE-SIMULATION REQUIRED`
+
+---
+
+# PHẦN 15 — THIẾT KẾ MATLAB GUI HOÀN CHỈNH
+
+Tên chương trình:
+
+`Vivaldi_DualPol_Live_API`
+
+File chạy chính:
+
+`Vivaldi_DualPol_Live_API.m`
+
+Chỉ cần gọi một lệnh từ MATLAB:
+
+`Vivaldi_DualPol_Live_API`
+
+Không yêu cầu người dùng chạy từng module thủ công.
+
+## Tab 1 — ANTENNA PARAMETERS
+
+Các nhóm tham số:
+
+- Flare.
+- Transition.
+- Slot.
+- Cavity.
+- Coax.
+- Metal Thickness.
+- Base.
+- Advanced Parameters.
+
+Tất cả biến độc lập được nhập trực tiếp.
+
+Hiển thị biến dẫn xuất.
+
+Các nút:
+
+- Calculate.
+- Validate.
+- Reset Defaults.
+- Target Length.
+- Apply Changes.
+- Update HFSS.
+
+Có thể chỉnh số thực tùy ý trong miền hợp lệ.
+
+Không giới hạn ở preset.
+
+## Tab 2 — GEOMETRY PREVIEW
+
+Preview hình học 2D/3D từ công thức.
+
+Phải phản ánh:
+
+- Hai tấm Vivaldi vuông góc.
+- Flare hình mũ.
+- Transition 21° hoặc góc người dùng nhập.
+- Slot.
+- Cavity.
+- Đế.
+- Coax.
+
+Có các hướng:
+
+- Front.
+- Side.
+- Top.
+- Isometric.
+
+Cho phép xoay và zoom.
+
+Preview phải thay đổi khi thông số thay đổi.
+
+Không sử dụng ảnh tĩnh của anten mặc định để giả lập preview tham số.
+
+Nếu preview chỉ gần đúng, phải hiển thị chú thích.
+
+## Tab 3 — LIVE HFSS CONNECTION
+
+Hiển thị:
+
+- Connection Status.
+- HFSS Version.
+- Active Project.
+- Active Design.
+- Working Project Path.
+- Last Update Status.
+- Unsaved Changes.
+
+Các nút:
+
+- Detect HFSS.
+- Connect.
+- Reconnect.
+- Create Working Copy.
+- Open Working Project.
+- Build From Scratch.
+- Update Geometry.
+- Validate Geometry.
+- Save.
+- Save As.
+- Open HFSS Window.
+
+Đường dẫn Ansys tham khảo:
+
+`D:\Program Files\AnsysEM\AnsysEM21.2\Win64\ansysedt.exe`
+
+Không hard-code duy nhất đường dẫn này.
+
+## Tab 4 — SIMULATION
+
+Cho phép:
+
+- Tùy chỉnh tần số.
+- Chọn excitation.
+- Validate.
+- Run Simulation.
+- Import Results.
+- Plot S-Parameters.
+- Plot Gain.
+- Plot Patterns.
+
+Không tạo dữ liệu giả.
+
+## Tab 5 — DEBUG & DIAGNOSTICS
+
+Hiển thị:
+
+- COM Errors.
+- Variable Errors.
+- Coordinate System Errors.
+- Equation Surface Errors.
+- Boolean Errors.
+- Coax Errors.
+- Port Errors.
+- Solver Errors.
+
+Có log theo từng checkpoint.
+
+Các nút:
+
+- Export Log TXT.
+- View Object Tree.
+- Show Failed Step.
+- Validate Geometry.
+- Restore Last Valid Parameters.
+- Open Working Project Folder.
+
+---
+
+# PHẦN 16 — KIỂM THỬ PHẦN MỀM
+
+Phải tạo đầy đủ Unit Tests và Integration Tests.
+
+## Test 01 — Mathematical Formulas
+
+Kiểm tra default parameter values.
+
+Đặc biệt:
+
+`L_patch ≈ 49.236303290 mm`
+
+Sai số dưới ngưỡng số học phù hợp.
+
+## Test 02 — Arbitrary Dimensions
+
+Kiểm tra những bộ tham số không nằm trong preset.
+
+Ví dụ:
+
+- L_flare_1 = 43.287 mm.
+- L_flare_1 = 61.352 mm.
+- aperture_w = 24.635 mm.
+- cavity_w = 1.725 mm.
+- thickness = 2.35 mm.
+
+Không dùng danh sách này làm giới hạn thiết kế.
+
+## Test 03 — Invalid Parameter Detection
+
+Kiểm tra:
+
+- Giá trị không dương khi yêu cầu dương.
+- Slot width không hợp lệ.
+- Coax radius sai thứ tự.
+- Cavity không còn phù hợp geometry.
+- Các tình huống topology có nguy cơ lỗi.
+
+## Test 04 — Target Length Solver
+
+Nhập các chiều dài mục tiêu tùy ý.
+
+Kiểm tra nghiệm và residual.
+
+## Test 05 — Direct COM Connection
+
+Kết nối thực sự với HFSS nếu môi trường hỗ trợ.
+
+## Test 06 — HFSS CAD Build
+
+Dựng từ project trống.
+
+## Test 07 — Flare Subtract
+
+Kiểm tra vùng flare rỗng thật.
+
+## Test 08 — SheetThicken
+
+Kiểm tra chiều dày và vùng khoét.
+
+## Test 09 — Dual Polarization
+
+Kiểm tra hai tấm vuông góc.
+
+## Test 10 — Coax and Port
+
+Kiểm tra hai coax và hai Lumped Ports.
+
+## Test 11 — Live Update
+
+Trong cùng một project, thay đổi liên tiếp nhiều tham số.
+
+Không tạo project mới.
+
+## Test 12 — Save/Reopen
+
+Lưu Working Project rồi mở lại.
+
+Các thông số vẫn đúng.
+
+## Test 13 — Reconnect
+
+Đóng hoặc mất kết nối HFSS.
+
+Ứng dụng phải xử lý lỗi và hỗ trợ reconnect.
+
+## Test 14 — Solver
+
+Validate và Analyze khi có HFSS cùng license.
+
+## Test 15 — ZIP Integrity
+
+Giải nén ZIP thử và xác nhận các file cần thiết tồn tại.
+
+Nếu không có MATLAB/Ansys, chỉ đánh dấu các integration tests là Pending.
+
+Không giả mạo kết quả.
+
+---
+
+# PHẦN 17 — KIẾN TRÚC SOURCE CODE
+
+Tạo folder:
+
+`Vivaldi_DualPol_Live_API_FINAL/`
+
+Cấu trúc gợi ý:
+
+- `Vivaldi_DualPol_Live_API.m` — ứng dụng chính.
+- `core/vivaldiDefaultParams.m`
+- `core/vivaldiCalculateGeometry.m`
+- `core/vivaldiValidateParams.m`
+- `core/vivaldiSolveTargetLength.m`
+- `core/vivaldiDependencyGraph.m`
+- `core/vivaldiPreview3D.m`
+- `com/HFSSCOMConnection.m`
+- `com/HFSSProjectManager.m`
+- `com/HFSSVariableManager.m`
+- `com/HFSSCoordinateBuilder.m`
+- `com/HFSSGeometryBuilder.m`
+- `com/HFSSFlareBuilder.m`
+- `com/HFSSCavityBuilder.m`
+- `com/HFSSDualPolBuilder.m`
+- `com/HFSSCoaxBuilder.m`
+- `com/HFSSPortBuilder.m`
+- `com/HFSSSimulationSetup.m`
+- `com/HFSSGeometryValidator.m`
+- `com/HFSSLiveUpdateManager.m`
+- `com/HFSSSessionMonitor.m`
+- `results/HFSSResultImporter.m`
+- `tests/`
+- `docs/`
+- `reference/`
+
+Có thể tổ chức lại nếu phương án khác tốt hơn.
+
+Không tạo file rỗng chỉ để đủ danh sách.
+
+Mỗi module phải có chức năng thực.
+
+Không bắt buộc dồn toàn bộ code vào một file MATLAB duy nhất.
+
+Yêu cầu người dùng chỉ cần chạy một hàm chính để mở ứng dụng.
+
+Ứng dụng phải tự thêm các đường dẫn module cần thiết.
+
+---
+
+# PHẦN 18 — TƯƠNG THÍCH MATLAB VÀ WINDOWS
+
+Mục tiêu là chạy trên Windows 10/11 với MATLAB và Ansys HFSS 2021 R2.
+
+Phải:
+
+- Kiểm tra version MATLAB.
+- Kiểm tra hỗ trợ COM.
+- Kiểm tra hệ điều hành.
+- Kiểm tra đường dẫn.
+- Kiểm tra HFSS session.
+- Xử lý đường dẫn có khoảng trắng.
+- Xử lý tên thư mục Unicode nếu có thể.
+- Không yêu cầu toolbox không cần thiết.
+- Không phụ thuộc PyAEDT.
+- Không yêu cầu Python để chạy ứng dụng chính.
+
+Nếu MATLAB version có giới hạn tính năng GUI, phải nêu phiên bản tối thiểu được hỗ trợ.
+
+Không tạo code sử dụng hàm không tồn tại trong bản MATLAB mục tiêu mà không có phương án thay thế.
+
+---
+
+# PHẦN 19 — THAM KHẢO THƯ VIỆN hfss-api
+
+Repository:
+
+https://github.com/yuip/hfss-api/
+
+Hãy nghiên cứu:
+
+- hfssRectangle.
+- hfssBox.
+- hfssCylinder.
+- hfssSubtract.
+- hfssUnite.
+- hfssRotate.
+- hfssThickenSheet.
+- hfssCreateRelativeCS.
+- hfssAssignLumpedPort.
+- hfssInsertSolution.
+- hfssSweepAnalysis.
+
+Mục đích là tìm hiểu cấu trúc HFSS Automation commands.
+
+Thư viện này không phải giải pháp persistent direct COM hoàn chỉnh.
+
+Vì vậy:
+
+- Không dùng nguyên architecture sinh VBScript.
+- Không giữ `BothSides=false` nếu mô hình gốc yêu cầu true.
+- Không đặt mọi object trong Global.
+- Không bỏ qua EquationBasedSurface.
+- Không bỏ qua DuplicateAroundAxis.
+- Không dùng helper cũ nếu không hỗ trợ đầy đủ cấu trúc CAD.
+
+Nếu sao chép mã nguồn từ repository đó, phải tuân thủ giấy phép GNU GPL tương ứng. Ưu tiên tự viết module COM mới và chỉ sử dụng thư viện làm tài liệu tham khảo.
+
+---
+
+# PHẦN 20 — TÀI LIỆU BẮT BUỘC
+
+Tạo các file:
+
+`README_TIENG_VIET.md`
+
+Hướng dẫn tổng quan và chạy ứng dụng.
+
+`INSTALL_WINDOWS.md`
+
+Cài đặt và chuẩn bị MATLAB/HFSS.
+
+`DIRECT_COM_API_GUIDE.md`
+
+Hướng dẫn kết nối COM, ProgID và những vấn đề tương thích.
+
+`HFSS_SOURCE_ANALYSIS.md`
+
+Phân tích dữ liệu `.aedt` và lịch sử CAD.
+
+`GEOMETRY_RECONSTRUCTION.md`
+
+Toàn bộ phương pháp tái dựng anten.
+
+`PARAMETRIC_DESIGN_GUIDE.md`
+
+Giải thích các biến độc lập, biến phụ thuộc và cách chỉnh kích thước tùy ý.
+
+`LIVE_UPDATE_WORKFLOW.md`
+
+Mô tả luồng cập nhật cùng Working Project.
+
+`SIMULATION_GUIDE.md`
+
+Cách thiết lập, chạy và xuất kết quả.
+
+`TROUBLESHOOTING.md`
+
+Hướng dẫn sửa lỗi COM, CAD, port, solver.
+
+`VALIDATION_REPORT.md`
+
+Kết quả kiểm thử thực tế.
+
+`KNOWN_LIMITATIONS.md`
+
+Những chức năng chưa được kiểm chứng hoặc chưa hỗ trợ.
+
+Tất cả tài liệu hướng dẫn sử dụng chính phải viết bằng tiếng Việt.
+
+---
+
+# PHẦN 21 — THỨ TỰ TRIỂN KHAI
+
+Phải làm theo thứ tự ưu tiên:
+
+**Giai đoạn 1: Reverse Engineering**
+
+Đọc `.aedt` và tài liệu phân tích.
+
+**Giai đoạn 2: Direct COM Feasibility**
+
+Xác minh các lời gọi COM cơ bản, đặc biệt nested SAFEARRAY.
+
+**Giai đoạn 3: Parametric Math Engine**
+
+Viết hàm tính toán, dependency graph và validation.
+
+**Giai đoạn 4: Main HFSS Geometry Builder**
+
+Dựng flare, transition, cavity, Subtract và SheetThicken.
+
+**Giai đoạn 5: Dual-Pol Geometry**
+
+Tạo phần tử thứ hai, bridge và base.
+
+**Giai đoạn 6: Coax/Ports**
+
+Dựng đường cấp nguồn và excitation.
+
+**Giai đoạn 7: Live Update**
+
+Thay biến trực tiếp trong một Working Project.
+
+**Giai đoạn 8: Solver Setup**
+
+Boundary, DrivenModal, sweep, far-field.
+
+**Giai đoạn 9: MATLAB GUI**
+
+Hoàn thiện các tab và điều khiển.
+
+**Giai đoạn 10: Validation/Testing**
+
+Kiểm tra logic, CAD và các hoạt động thực tế có thể thực hiện.
+
+**Giai đoạn 11: Documentation**
+
+Viết tài liệu tiếng Việt.
+
+**Giai đoạn 12: ZIP Packaging**
+
+Đóng gói sản phẩm.
+
+Không dừng lại sau phần phân tích hoặc demo kết nối COM.
+
+Không dành phần lớn thời gian làm giao diện khi dựng hình chưa đúng.
+
+---
+
+# PHẦN 22 — TIÊU CHÍ NGHIỆM THU CUỐI CÙNG
+
+Sản phẩm phải hướng đến khả năng:
+
+**Mở MATLAB → Connect HFSS → Mở Working Project → Nhập kích thước bất kỳ hợp lệ → Update Geometry → HFSS cập nhật mô hình thật → Validate → Save/Simulate.**
+
+Các điều kiện quan trọng:
+
+1. Không cần mỗi lần tạo một project mới.
+2. Không cần mỗi lần sinh một VBScript.
+3. Không giới hạn các kích thước vào preset.
+4. Không thay thế hình học gốc bằng Vivaldi tổng quát.
+5. Không làm mất vùng khoét flare.
+6. Không làm sai transition 21° mặc định.
+7. Không làm sai cavity.
+8. Không làm sai vị trí hai phân cực.
+9. Không làm sai coax.
+10. Không tạo port giả.
+11. Không tự giả lập solver results.
+12. Không báo thành công khi geometry chưa được kiểm chứng.
+13. Không ghi đè file AEDT tham chiếu.
+14. Không push GitHub.
+15. Cung cấp ZIP tải trực tiếp.
+
+Phải phân biệt rõ:
+
+- Code implemented.
+- Static test passed.
+- MATLAB runtime tested.
+- HFSS COM tested.
+- HFSS geometry validated.
+- HFSS simulation completed.
+
+Các trạng thái này không được đánh đồng.
+
+---
+
+# PHẦN 23 — ĐÓNG GÓI VÀ BÀN GIAO
+
+Sau khi hoàn thành:
+
+1. Kiểm tra file MATLAB chính.
+2. Kiểm tra các dependency.
+3. Kiểm tra unit tests.
+4. Kiểm tra các module COM.
+5. Kiểm tra tài liệu.
+6. Kiểm tra tên file và tên hàm.
+7. Kiểm tra dữ liệu nguồn không bị thay đổi.
+8. Tạo ZIP.
+9. Thử giải nén và kiểm tra nội dung ZIP.
+10. Cung cấp ZIP thực tế.
+
+Tên ZIP:
+
+**`Vivaldi_DualPol_Live_API_FINAL.zip`**
+
+Trả về cho tôi:
+
+- File ZIP tải trực tiếp.
+- Cách chạy trong MATLAB.
+- Các tính năng đã triển khai.
+- Các test đã được chạy.
+- Các test chưa thể chạy.
+- Các hạn chế kỹ thuật còn tồn tại.
+- Cách tôi có thể gửi log để tiếp tục sửa nếu HFSS phát sinh lỗi.
+
+**KHÔNG UPLOAD LÊN GITHUB.**
+
+**KHÔNG TẠO PULL REQUEST.**
+
+**KHÔNG BÀN GIAO CHỈ BẰNG PSEUDOCODE.**
+
+**KHÔNG TỰ TUYÊN BỐ FULLY VERIFIED NẾU CHƯA CHẠY THỬ TRÊN HFSS.**
+
+---
+
+# PHẦN 24 — YÊU CẦU THỰC THI CUỐI CÙNG
+
+Hãy bắt đầu thực hiện công việc thực tế ngay.
+
+Không dừng ở việc viết kế hoạch.
+
+Không liên tục yêu cầu tôi xác nhận những thông số đã có trong file nguồn.
+
+Sử dụng các giá trị mặc định từ `.aedt` để xây dựng baseline và unit tests.
+
+Thiết kế phần mềm để tôi có thể nhập các kích thước khác một cách tự do trong miền hình học hợp lệ.
+
+Chỉ cần một Working Project được cập nhật liên tục thông qua Direct COM Automation.
+
+Bảo toàn hoàn chỉnh hình dạng Vivaldi dual-pol theo file ngày 17/10 và hai ảnh chuẩn tôi cung cấp.
+
+Nếu môi trường không có Ansys, vẫn triển khai đầy đủ các phần có thể lập trình và kiểm tra tĩnh, nhưng phải công khai những phần còn chờ integration test.
+
+Không tự chuyển kiến trúc sang VBScript khi chưa được phép.
+
+**DELIVERABLE CUỐI CÙNG DUY NHẤT LÀ FOLDER PHẦN MỀM HOÀN CHỈNH ĐƯỢC ĐÓNG GÓI THÀNH `Vivaldi_DualPol_Live_API_FINAL.zip`, KHÔNG PHẢI MỘT GITHUB COMMIT.**
+
+**HÃY TIẾN HÀNH TRIỂN KHAI TOÀN BỘ SOURCE CODE, KIỂM TRA, VIẾT TÀI LIỆU VÀ XUẤT ZIP.**
