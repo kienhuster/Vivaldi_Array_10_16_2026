@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "matlabFiles": 34,
+  "sourceBytes": 669840,
+  "sourceSHA256": "631820b2c07f457fd22f5cdab2aeae15694788c869629935460b2cefda1ba619",
+  "balancedSourceBlocks": 3285,
+  "checks": [
+    "function/file names",
+    "source integrity",
+    "direct COM gateway",
+    "no script execution",
+    "same-project update guard",
+    "topology/volume probes present",
+    "five GUI tabs",
+    "required Vietnamese docs"
+  ],
+  "scope": "Static structure only; MATLAB desktop/HFSS still PENDING"
+}

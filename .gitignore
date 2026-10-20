@@ -1,0 +1,32 @@
+# MATLAB editor and compiled artifacts
+*.asv
+*.m~
+*.mex*
+
+# Python developer-tool caches and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# HFSS generated results, recovery files and locks; keep reference AEDT files
+*.aedtresults
+*.aedtresults/
+*.aedt.lock
+*.aedt.auto
+*.aedt.bak
+*.aedt.live.json
+*.aedt.builder.json
+
+# Live API runtime output (release verification reports remain tracked)
+/Vivaldi_DualPol_Live_API_FINAL/work/
+/Vivaldi_DualPol_Live_API_FINAL/logs/
+
+# Local credentials and operating-system files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+Thumbs.db
