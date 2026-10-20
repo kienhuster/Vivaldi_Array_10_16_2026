@@ -1,21 +1,22 @@
 function g = vivaldiCalculateGeometry(p)
-    % VIVALDIBUILDERGEOMETRY Source formulas, coordinates and mathematical samples.
-    % Samples and nominal envelopes do not certify CAD contact or Boolean success.
+    % Mục đích: tính 12 biến dẫn xuất, biểu thức HFSS và biến đổi tọa độ nguồn.
+    % Đầu vào p là 19 biến độc lập; đầu ra g có công thức và mẫu preview.
+    % Giữ nguyên độ chính xác trung gian; các mẫu không chứng minh Boolean/tiếp xúc CAD.
     defaults = vivaldiDefaultParams();
     names = fieldnames(defaults);
     assert(isstruct(p) && isscalar(p), 'VivaldiBuilder:InvalidParameters', ...
-           'Parameters must be a scalar struct.');
+           'Thông số phải là struct scalar.');
     assert(isequal(sort(fieldnames(p)), sort(names)), ...
-           'VivaldiBuilder:InvalidParameters', 'Parameters must contain exactly the 19 independent variables.');
+           'VivaldiBuilder:InvalidParameters', 'Thông số phải có đúng 19 biến độc lập.');
     for k = 1:numel(names)
         v = p.(names{k});
         assert(isnumeric(v) && isreal(v) && isscalar(v) && isfinite(v), ...
-               'VivaldiBuilder:InvalidParameters', '%s must be a finite real scalar.', names{k});
+               'VivaldiBuilder:InvalidParameters', '%s phải là số thực scalar hữu hạn.', names{k});
         p.(names{k}) = double(v);
     end
     assert(p.slot_feed_w > 0 && p.aperture_w > p.slot_feed_w && ...
            p.L_flare_1 > 0 && 6.4 + p.them > 0, 'VivaldiBuilder:InvalidParameters', ...
-           'Positive flare lengths and aperture_w > slot_feed_w > 0 are required.');
+           'Cần chiều dài loe dương và aperture_w > slot_feed_w > 0.');
     g = struct();
     g.slot_t_L = 6.4 + p.them;
     g.L_flare = p.L_flare_1 + g.slot_t_L;
@@ -39,8 +40,8 @@ function g = vivaldiCalculateGeometry(p)
     g.independentNames = names;
     g.independent = p;
     g.sourceDesign = 'dual_pol_vivaldi_patch_Wflare_20';
-    g.verificationStatus = 'Formula Only - HFSS Validation Pending';
-    % Exact dependent strings, including ln, are passed to HFSS, never eval'd.
+    g.verificationStatus = 'Chỉ công thức — chờ kiểm tra HFSS';
+    % Giữ nguyên biểu thức dẫn xuất cho HFSS, gồm ln; không dùng eval trong MATLAB.
     g.expressions = { ...
                      'L_flare_1', literal(p.L_flare_1, 'mm'); ...
                      'slot_t_L', '6.4mm+them'; ...
@@ -126,7 +127,7 @@ function g = vivaldiCalculateGeometry(p)
     g.bounds.base = [min(g.base.corners, [], 1)' max(g.base.corners, [], 1)'];
     g.bounds.body = [-A A + t; -t / 2 p.aperture_w + t / 2; g.z_base g.L_flare];
     g.bounds.region = g.bounds.body + repmat([-20 20], 3, 1);
-    g.bounds.description = 'Nominal envelopes before voids; not measured HFSS bounding boxes.';
+    g.bounds.description = 'Bao danh nghĩa trước khi khoét; không phải kích thước đo trong HFSS.';
     c = [g.coax_x 0 g.coax_z];
     g.cables(1) = struct('innerStart', c, 'innerEnd', c - [0 0 g.h_cabin], ...
                          'outerStart', c - [0 0 p.slot_feed_w], ...
@@ -150,7 +151,7 @@ function g = vivaldiCalculateGeometry(p)
     for name = {'center', 'start', 'end'}
         g.ports(2).(name{1}) = dual(g.ports(1).(name{1}), g);
     end
-    g.portLineStatus = 'Outer-to-inner confirmed; radial azimuth reconstructed, HFSS phase comparison pending.';
+    g.portLineStatus = 'Đường tích phân ngoài vào trong; góc phương vị tái dựng, chờ so pha HFSS.';
 end
 
 function s = literal(v, unit)

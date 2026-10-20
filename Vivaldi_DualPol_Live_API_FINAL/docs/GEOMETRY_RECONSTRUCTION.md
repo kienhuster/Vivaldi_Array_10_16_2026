@@ -1,34 +1,30 @@
-# Tái dựng CAD
+# Tái dựng và đo kiểm hình học
 
-Chuỗi thực thi nằm ở `HFSSGeometryBuilder`, các builder con và `HFSSGeometryValidator`. Mỗi method gọi trực tiếp COM và dừng nếu có lỗi. Đây là implementation chưa có xác nhận CAD thực tế trên môi trường bàn giao.
+Nguồn chính là `17_10_2026_vivaldi.aedt`, design `dual_pol_vivaldi_patch_Wflare_20`, DrivenModal/mm. Không dùng HFSSDesign1 gần rỗng hoặc mô hình Vivaldi trên Internet. Hai ảnh chuẩn chưa có trong workspace nên chưa so hình ảnh.
 
-| Checkpoint | Thao tác / bằng chứng runtime cần có |
+`VivaldiBuilder` gọi helper thật của hfss-api qua writer và extension thiếu. Bốn CS giữ đúng parent, gốc symbolic; RelativeCS1 có parent patch_td và local (0,-thickness/2,0). Normal Y của Rectangle có Width theo Z, Height theo X. Rectangle dùng covered sheet của helper thay cho wire+CoverLines riêng; mặt CAD tương đương còn cần runtime kiểm tra.
+
+| Checkpoint | Thao tác và bằng chứng |
 |---|---|
-| CHECK_01 | Tạo Global-relative slot_t_td, slot_feed_td, patch_td, RelativeCS1; parent cuối là patch_td, đọc lại Reference CS |
-| CHECK_02 | EquationSurface1: x=_v*(slot_feed_w/2)*exp(_u*r_flare), y=0, z=_u, u=0..L_flare; object và face IDs |
-| CHECK_03 | EquationSurface2 cùng công thức, u=0..slot_t_L; object và face IDs |
-| CHECK_04 | Copy short surface trước xoay, Subtract khỏi long surface, giữ short gốc |
-| CHECK_05 | Rotate EquationSurface2 quanh slot_t_td Y, góc deg_slot_t |
-| CHECK_06 | Ba rectangle + CoverLines trong slot_feed_td, normal Y; Width theo Z, Height theo X |
-| CHECK_07 | Unite composite cutter; không còn cutter ngoài dự kiến |
-| CHECK_08 | Subtract cutter khỏi Vivaldi sheet trong patch_td; probe lỗ flare, 2 mép metal và slot/cavity |
-| CHECK_09 | ThickenSheet thickness, BothSides=true; probe vùng ±0.45t/±0.55t và lỗ vẫn rỗng |
-| CHECK_10 | Duplicate Z=-90deg quanh RelativeCS1, NumClones=2, Move +thickness Y; probe flare thứ hai |
-| CHECK_11 | Box1 local RelativeCS1 và De Global, toàn bộ dùng biểu thức |
-| CHECK_12 | Unite 2 tấm + connector + base; kiểm tra cả 2 flare |
-| CHECK_13 | Inner/outer/middle coax1 và circular port1 trong slot_feed_td |
-| CHECK_14 | Clone feeds và port quanh RelativeCS1, Move +thickness |
-| CHECK_15 | 6 full-cylinder snapshots, hollow copper outer, Subtract 6 cutters khỏi metal, đo volume/port/void |
-| CHECK_16 | 2 Lumped Ports 50ohm, mode1; đọc danh sách excitations |
-| CHECK_17 | Region 20mm sáu hướng; Open1 Radiation đọc lại |
-| CHECK_18 | DrivenModal Setup1, discrete sweep, 3 farfield spheres, excitation mặc định 1W/0W |
+| CHECK_01 | Bốn CS; đọc parent sau khi đặt lại local origin |
+| CHECK_02/03 | EquationSurface1 u=0..L_flare và EquationSurface2 u=0..slot_t_L, x=_v*(slot_feed_w/2)*exp(_u*r_flare) |
+| CHECK_04 | Clone short trước trim long, không làm mất short gốc |
+| CHECK_05 | Rotate short quanh slot_t_td Y bằng deg_slot_t (default21°) |
+| CHECK_06/07 | Rectangle1/2/3 trong slot_feed_td; Unite thành cutter tổng |
+| CHECK_08 | Subtract cutter khỏi Vivaldi sheet; đo tâm rỗng, hai mép metal, slot/cavity |
+| CHECK_09 | Thicken thickness, BothSides=true; đo trong/ngoài ±t/2 và lỗ còn rỗng |
+| CHECK_10 | Duplicate Z=-90deg, NumClones=2 trong RelativeCS1, Move Y=thickness; đo pol2 |
+| CHECK_11/12 | Box1, De và Unite thân; cả hai vùng flare vẫn rỗng |
+| CHECK_13/14 | Tạo coax1/port1, duplicate/Move coax2/port2 theo cùng phép biến đổi |
+| CHECK_15 | 6 full-cylinder snapshots trước hollowing, Subtract khỏi nhôm, giữ 4 conductors, đo volume/ports |
+| CHECK_16 | 2 Lumped Ports50Ω, outer-to-inner; field phase vẫn chờ đối chiếu |
+| CHECK_17 | Region20mm sáu hướng, Open1 Radiation |
+| CHECK_18 | Mesh nguồn, Setup1, sweep Discrete, farfield và excitation; chưa tự solve |
 
-Các số nguồn không thay biểu thức. Ví dụ RelativeCS1 local (0,-thickness/2,0) so với patch_td. Box1 sizes (thickness,thickness,-L_patch). Base position ((de_L+thickness)/2,-(de_W-aperture_w)/2,z_feed-h3_slot_feed-slot_feed_w), sizes (-de_L,de_W,-h_de).
+Sau Subtract, hệ thống không chỉ hỏi object còn tên hay bounding box. Probe z=10/25/40mm nếu nằm trong miền loe hợp lệ, đồng thời ba cao độ tương đối cho kích thước khác. Tâm phải rỗng, hai bên phải có metal. Phép biến đổi nguồn áp dụng cả probes pol2. Sau thicken thêm điểm ±0.45t trong metal và ±0.55t ngoài metal. Không hỗ trợ point-query trên sheet thì dừng và báo chưa kiểm chứng/không đạt.
 
-Flare probes chọn z=10,25,40mm khi các mặt cắt nằm trong đoạn loe hợp lệ; thêm ba cao độ tương đối khi thiết kế đổi. Mỗi mặt cắt đo tâm phải rỗng, hai điểm giữa mép flare và biên tấm phải là metal. Phép biến đổi dual-pol áp dụng cho cả probes của tấm thứ hai. Bounding box chỉ là kiểm tra bổ sung. Nếu point-query trên sheet không được HFSS hỗ trợ, compatibility test và CHECK_08 sẽ dừng; không dựng tiếp một tấm đặc rồi báo thành công.
+Coax được đo volume πr²h và π(ro²-ri²)h, điểm lõi/bore/annulus; port face area πr_mid² và face center; material/SolveInside đọc lại. Body vertex bounds chỉ là bằng chứng bổ sung. Cuối cùng đúng 8 top-level parts, 2 Lumped Ports, Open1 và ValidateDesign success code1.
 
-Coax đo volume inner/outer so với πr²h và π(ro²-ri²)h, point topology trong bore/annulus, port area πr_mid² và tâm face. Sau cùng inventory phải đúng tám top-level names. ValidateDesign chỉ được chấp nhận nếu trả số 1. Các mẫu hữu hạn không chứng minh toàn bộ miền liên tục; phải inspect CAD và field phase trước khi dùng cho chế tạo hoặc RF study.
+Khác biệt công khai: dùng sacrificial snapshot với KeepOriginals=false thay tool operand giữ lại trong nguồn; snapshot chụp outer còn đặc trước hollowing. Middle cutter Move dùng thickness thay literal2mm. Default tương đương công thức, không tuyên bố CAD tương đương đã chạy. Ports dùng tọa độ symbolic outer-to-inner, không lấy Edge IDs cũ; hướng azimuth/pha cần so field nguồn. Không thêm FR4/PTFE/Rogers hoặc array/Optimetrics.
 
-Debug Build có thể dừng ở từng checkpoint bằng hộp thoại Continue/Stop để xem Modeler thật trong HFSS. Object tree ở GUI là inventory top-level, không phải toàn bộ child history. Không có ảnh HFSS giả; export ảnh HFSS tự động chưa triển khai vì chưa kiểm chứng signature 2021 R2, có thể chụp trực tiếp trong HFSS khi gửi log.
-
-Mỗi record có executionStatus và geometryStatus riêng. Checkpoint đã dispatch/query được có thể executionStatus=PASS nhưng geometryStatus=PENDING nếu chưa đo đủ; không gộp chúng thành xác nhận toàn bộ CAD. Các probes thực đo thành công mới ghi geometryStatus=PASS trong phạm vi mẫu đã đo.
+Execution PASS chỉ xác nhận phần gọi/readback của bước đã chạy; geometry PENDING nếu chưa đo đầy đủ. CHECK08/09/10/12/15 mới ghi geometry PASS sau các probes thực. Sinh script trên cloud không sinh PASS cho CAD. Debug từng bước dùng MsgBox của HFSS; cửa sổ có thể modal và cần Windows test. Không có ảnh CAD giả hoặc tự export screenshot chưa hỗ trợ.

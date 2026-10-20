@@ -1,6 +1,6 @@
 function [q, report] = vivaldiSolveTargetLength(p, target, bracket)
-    % VIVALDIBUILDERTARGETLENGTH Solve L_patch by changing only L_flare_1.
-    % fzero is in base MATLAB. Only connected valid intervals are bracketed.
+    % Mục đích: tìm L_flare_1 bằng fzero để đạt chiều dài tổng L_patch bất kỳ.
+    % Chỉ dò những khoảng liên tiếp hợp lệ; không vượt qua miền topology bị loại.
     [ok, errors, ~, before] = vivaldiValidateParams(p);
     assert(ok, 'VivaldiBuilder:InvalidParameters', '%s', strjoin(errors, newline));
     assert(isnumeric(target) && isreal(target) && isscalar(target) && ...
@@ -44,7 +44,7 @@ function [q, report] = vivaldiSolveTargetLength(p, target, bracket)
     report = struct('before', before, 'after', after, 'target', target, ...
                     'beforeParams', p, 'afterParams', q, 'residual', after.L_patch - target, ...
                     'bracket', bracket, 'bounds', bracket, 'changedVariable', 'L_flare_1', ...
-                    'verificationStatus', 'Numerical length only - HFSS Validation Pending');
+                    'verificationStatus', 'Chỉ xác nhận chiều dài bằng số — chờ kiểm tra HFSS');
 
     function y = residual(x)
         trial = p;

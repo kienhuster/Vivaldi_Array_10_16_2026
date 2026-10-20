@@ -1,5 +1,6 @@
 function [ok, errors, warnings, g] = vivaldiValidateParams(p)
-    % VIVALDIBUILDERVALIDATE Input and basic algebraic checks, never CAD certification.
+    % Mục đích: kiểm tra miền số và ràng buộc đại số trước khi gửi sang HFSS.
+    % Đầu ra ok/errors/warnings/g; kết quả hợp lệ không phải chứng nhận CAD/RF.
     errors = {};
     warnings = {};
     g = struct();
@@ -79,6 +80,6 @@ function [ok, errors, warnings, g] = vivaldiValidateParams(p)
         warnings{end + 1} = 'Tham số khác nguồn chuẩn: phải kiểm tra lại Boolean, port, region và mô phỏng.';
     end
     warnings{end + 1} = ['Kiểm tra đại số không chứng minh tiếp xúc CAD, topology hoặc hiệu năng RF. ' ...
-                         'HFSS Validation Pending.'];
+                         'Chờ kiểm tra thực tế bằng HFSS.'];
     ok = isempty(errors);
 end

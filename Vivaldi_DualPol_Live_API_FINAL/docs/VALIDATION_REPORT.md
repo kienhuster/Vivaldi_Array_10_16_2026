@@ -1,58 +1,45 @@
-# Báo cáo kiểm thử
+# Báo cáo kiểm thử backend hfss-api
 
-Báo cáo máy đọc được ở `tests/verification/`. Các trạng thái code/static/portable không được đánh đồng với MATLAB desktop hoặc HFSS. Bản này được kiểm tra trên Linux, không có MATLAB/Ansys.
+Kết quả thực chạy được lưu trong `tests/verification/`. Script được sinh trên Linux, không chạy bên trong HFSS. Không đánh đồng code implemented, syntax/static passed, Octave runtime và HFSS geometry/simulation validated.
 
-| Mức bằng chứng | Trạng thái |
+| Phạm vi | Trạng thái tại cloud |
 |---|---|
-| Mã MATLAB triển khai | Có, xem module thực tế |
-| Phân tích tĩnh MATLAB | Kết quả thực tế trong lint-result.txt |
-| Runtime công thức + protocol | Kết quả thực tế trong portable-test-results.json |
-| MATLAB desktop/GUI | PENDING |
-| Direct COM/SAFEARRAY trên HFSS | PENDING |
-| HFSS geometry validated | PENDING |
-| HFSS simulation completed | PENDING |
-| ZIP integrity | Báo cáo packaging-verified.json trong ZIP |
+| Helper gốc thực được gọi để sinh VBS | Có; danh sách helper trong từng job JSON, được portable test kiểm tra |
+| Công thức/kích thước tự do/target/transform/HPBW | Chạy bằng GNU Octave, xem báo cáo portable thực tế |
+| Update script cùng project, changed-only, rollback, no solve/save | Kiểm tra nội dung sinh và protocol status giả, không phải CAD runtime |
+| Lint module tự viết và helper vendor được dùng | Xem lint-result.txt; không tự sửa toàn bộ helper upstream không dùng |
+| Kiểm tra VBS vật lý dòng/continuation/quotes/ngoặc/block | Kiểm tra tĩnh, không thay VBScript parser/Ansys runtime |
+| GUI MATLAB mở/callback/tất cả tab/nút Việt hóa | PENDING — có testVivaldiGUI, thiếu MATLAB desktop |
+| HFSS API cơ bản | PENDING — có runHFSSAPIIntegration |
+| CAD flare/transition/cavity/BothSides/pol2/coax/port thực | PENDING — checkpoint đo runtime có sẵn |
+| Save/Reopen/Update thật trong HFSS | PENDING |
+| Solver, field phase, hội tụ và so ảnh chuẩn | PENDING |
 
-## Ánh xạ Test 01–15 của yêu cầu
+## Kiểm thử đã viết
 
-| Test | Phạm vi đã thực hiện / còn chờ |
-|---|---|
-| 01 Formulas | Portable: default L_patch và số kiểm chứng nguồn |
-| 02 Arbitrary dimensions | Portable: 5 giá trị chiều dài lẻ + bộ đổi aperture/cavity/thickness |
-| 03 Invalid parameters | Portable: radius order, nonpositive, nonfinite, cavity vượt biên |
-| 04 Target Length | Portable: 49,50,57.35,91.624mm; residual; mục tiêu không hợp lệ |
-| 05 Direct COM | PENDING Windows; có runCOMCompatibilityTests |
-| 06 CAD build | PENDING Windows; có runHFSSIntegrationTests, 18 checkpoints |
-| 07 Flare subtract | PENDING HFSS; portable chỉ xác minh command order/protocol |
-| 08 SheetThicken | PENDING HFSS; có inside/outside/void assertions runtime |
-| 09 Dual pol | Công thức transform được portable test; CAD PENDING |
-| 10 Coax/port | Tọa độ và bán kính nguồn được kiểm tra công thức; CAD/field PENDING |
-| 11 Live update | Protocol-double kiểm tra same-project, rollback/partial failure; COM thực PENDING |
-| 12 Save/Reopen | PENDING HFSS; integration đọc lại 31 variables |
-| 13 Reconnect | Protocol-double mất handles được kiểm tra; shutdown AEDT thực/manual PENDING |
-| 14 Solver | PENDING Windows/HFSS/license; chỉ explicit opt-in mới Analyze Setup1 |
-| 15 ZIP integrity | Đọc CRC, giải nén, so SHA từng file, kiểm tra dependencies khi đóng gói |
+`runHFSSAPITests` có nhóm helper thật/precision, mở rộng CS/BothSides, full build script, thứ tự cutter, update4 biến không NewProject/Save/Analyze, Save vs SaveAs, solver/report gates, bảo vệ nguồn/literal, UTF16/ACK/partial line, terminal/rollback status giả, offline Pending, timeout khóa job, default/arbitrary/invalid dimensions, fzero arbitrary target, transform/dependency và HPBW. Fixtures status và parabola là test thuật toán, không được đưa vào GUI như kết quả HFSS.
+
+`testVivaldiGUI` (MATLAB unittest) kiểm tra5 tab tiếng Việt, số nút3/0/5/2/1, numeric callback, không phát sinh HFSS job khi sửa số. Native axes-toolbar của MATLAB hoặc API error gốc có thể theo ngôn ngữ bản cài.
+
+`runHFSSAPIIntegration` trên Windows tạo project thử Box liên kết biến, sheet Subtract, BothSides và positive/negative point probes; fullBuild=true bổ sung dựng anten, hai lượt đổi kích thước cùng file, Save/Reload và đọc biến. Không đóng hoặc sửa project tham chiếu. Chỉ khi đặt biến môi trường solver mới Analyze trong integration.
 
 ## Chạy lại trên Windows
 
 ```matlab
 addpath('tests');
-runPortableTests(fullfile(pwd,'logs','portable'));
-runtests('tests/testLiveAPI.m');
-runCOMCompatibilityTests(fullfile(pwd,'logs','com'));
-setenv('VIVALDI_RUN_HFSS_TESTS','1');
-runHFSSIntegrationTests(fullfile(pwd,'logs','integration'));
+runHFSSAPITests(fullfile(pwd,'work','portable'));
+runtests('tests/testVivaldiGUI.m');
+exe = 'D:\Program Files\AnsysEM\AnsysEM21.2\Win64\ansysedt.exe'; % thay theo máy
+runHFSSAPIIntegration(fullfile(pwd,'work','integration'),exe,true);
 ```
 
-Chỉ khi chủ động muốn dùng solver/license, đặt thêm `setenv('VIVALDI_RUN_SOLVER_TESTS','1')` trước integration run. Test không kill phiên AEDT của người dùng. Shutdown/reconnect thật là manual test riêng: lưu project, đóng AEDT, quan sát connection lost, mở đúng 2021 R2 và Reconnect/Open.
-
-Mock transport trong tests chỉ mô phỏng protocol trả lời/điều kiện lỗi, không mô phỏng hình học hoặc điện từ. Các record PASS do mock tạo ở unit test không phải report geometry của máy thật. Test HPBW dùng parabola tổng hợp để kiểm tra thuật toán duy nhất, không xuất nó như kết quả anten.
+Muốn chạy solver trong bài test tích hợp, chủ động `setenv('VIVALDI_RUN_SOLVER_TESTS','1')`. Không bỏ pending hoặc mock thành Direct COM Verified/HFSS Passed.
 
 ## Kết quả thực chạy ngày 20/10/2026
 
-- MISS_HIT 0.9.44: 34 tệp MATLAB, không lỗi/cảnh báo.
-- GNU Octave 9.4.0: 20 nhóm công thức/protocol đạt; source literals được so bằng số, derived expressions được so nguyên biểu thức sau bỏ whitespace.
-- Static audit: SHA-256 nguồn đúng, 3285 block AEDT cân bằng, tên hàm/file và cấu trúc runtime đạt.
-- COM compatibility runner trả PENDING trên Linux; 10 mục integration HFSS đều PENDING. MATLAB unittest có 2 test đã viết, chưa chạy MATLAB desktop.
-
-Hồi quy bổ sung LastUpdateStatus: trạng thái thành công, thất bại và rollback được chạy bằng Octave với protocol double và đạt.
+- MISS_HIT 0.9.44: 21 tệp tự viết và 28 helper upstream được dùng, tổng49 tệp, không lỗi/cảnh báo.
+- GNU Octave 9.4.0: 16 nhóm portable đạt trên mã refactor hiện tại; báo cáo hfss-api-portable-results.json.
+- 8 kịch bản VBS sinh thực: BOM UTF16, strings/ngoặc, số dòng vật lý/continuation và Sub/Function cân bằng đều đạt kiểm tra tĩnh; không coi là đã thực thi VBS.
+- Nguồn AEDT đúng SHA-256, 3285 khối cân bằng. 89 tệp upstream được đối chiếu hash; chỉ launcher có bản vá công khai.
+- Module MATLAB tự viết giảm34 → 21. Kiểm tra tĩnh xác nhận5 tab Việt hóa và11 nút chính, không có actxserver/actxGetRunningServer trong runtime MATLAB.
+- Integration runner trả PENDING trên Linux. GUI, API/CAD thật, Save/Reopen trong HFSS, pha port và solver vẫn chưa chạy.

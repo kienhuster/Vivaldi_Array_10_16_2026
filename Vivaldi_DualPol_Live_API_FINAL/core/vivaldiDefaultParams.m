@@ -1,7 +1,6 @@
 function [p, meta] = vivaldiDefaultParams()
-    % VIVALDIBUILDERDEFAULTPARAMS All 19 independent variables of the 17/10 model.
-    % Units are mm and degrees. Ranges guide GUI controls; they are not a CAD
-    % feasibility certificate. Numeric GUI inputs are unrestricted by these hints.
+    % Mục đích: khai báo 19 biến độc lập và metadata của mô hình ngày 17/10.
+    % Đơn vị mm/độ; range chỉ là gợi ý, không giới hạn ô nhập numeric.
     p = struct('L_flare_1', 40, 'aperture_w', 20, 'slot_feed_w', 0.5, ...
                'deg_slot_t', 21, 'h3_slot_feed', 1, 'h2', 2.6, 'cavity_w', 1.4, ...
                'cavity_L', 5, 'h_de', 2, 'r_cabin', 0.15, 'positionx', 0.15, ...

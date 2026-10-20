@@ -169,12 +169,7 @@ Các miền của hai tấm nêu trên là **bounding boxes trước khi xét ph
 **Nhận định:** File ngày 17/10 là nguồn chuẩn hợp lý cho **hình học dual-pol hoàn chỉnh**. Không được sử dụng thông số `L_flare_1=90 mm` của file 16/10 khi tái tạo phiên bản ngày 17/10.
 
 
-## Đối chiếu bổ sung cho bản Live API
 
-Bản nguồn SHA-256 `631820b2c07f457fd22f5cdab2aeae15694788c869629935460b2cefda1ba619`, 669840 bytes, chứa 31 biến (19 independent/12 derived). Không chỉnh source checkout hoặc file tham chiếu trong ZIP. Ảnh HFSS chuẩn chưa được cung cấp trong workspace; không dùng ảnh Internet thay thế.
+## Backend hfss-api hiện tại
 
-Khác biệt có chủ đích: scratch builder dùng Move Y=`thickness` cho middle cutter thứ hai, thay literal 2mm. Bản sao do Create Working Copy tạo chỉ chuẩn hóa đúng literal này trên bản sao trước khi mở. Default tương đương đại số; CAD khi thay thickness vẫn phải probe trong HFSS.
-
-Scratch builder dùng các bản sao cutter dùng một lần và KeepOriginals=false, thay các tool operand giữ lại trong lịch sử nguồn với KeepOriginals=true. Bốn conductor hoạt động được giữ riêng. Các outer cutters được chụp khi còn cylinder đặc trước khi hollowing để không bỏ sót nhôm trong bore. Sự tương đương Boolean cần integration test; không coi chỉ tên object là bằng chứng.
-
-Integration lines: outer-to-inner, pol1 -X, pol2 +Y theo phép biến đổi. Edge IDs của nguồn không tái sử dụng; azimuth được tái dựng, chưa so pha field thực tế. Sáu Optimetrics không tự dựng/chạy; phần mềm tập trung một phần tử. Vật liệu giữ các tính chất điện từ từ nguồn, không tái dựng dữ liệu cơ/nhiệt không dùng trong mô phỏng HFSS này.
+Mô hình nguồn và công thức không đổi. Refactor dùng helper gốc thật, không persistent COM trong MATLAB. Xem GEOMETRY_RECONSTRUCTION.md về khác biệt covered sheet, cutter snapshot, Move=thickness và phạm vi đo CAD còn pending. Hai ảnh chuẩn chưa có trong workspace.
