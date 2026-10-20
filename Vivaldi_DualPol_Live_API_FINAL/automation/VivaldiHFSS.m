@@ -182,6 +182,7 @@ classdef VivaldiHFSS < handle
         end
 
         function job = start(o, action, p, cfg)
+            % Kiểm tra baseline/path trước khi chạy; chế độ offline không được coi là CAD đã dựng.
             if nargin < 4
                 cfg = struct();
             end
@@ -235,6 +236,7 @@ classdef VivaldiHFSS < handle
         end
 
         function changed = poll(o)
+            % Chỉ chấp nhận ACK đúng job, terminal đúng action và dữ liệu đọc lại; timeout vẫn giữ khóa.
             changed = false;
             if isempty(o.ActiveJob)
                 return
@@ -484,6 +486,7 @@ classdef VivaldiHFSS < handle
         end
 
         function verifySaved(path, p)
+            % Đọc lại file thật sau Save, kiểm tra NoArray, cổng và các biểu thức phụ thuộc.
             assert(isfile(path), 'Vivaldi:Save', 'HFSS chưa tạo file AEDT.');
             info = vivaldiInspectReference(path);
             assert(info.portCount == 2 && info.radiationCount == 1 && info.noArray, 'Vivaldi:Save', 'File lưu thiếu port/radiation/NoArray.');
@@ -522,6 +525,7 @@ classdef VivaldiHFSS < handle
         end
 
         function data = readStatus(path, id)
+            % Đọc UTF16 và bỏ dòng chưa hoàn tất để không nhận nhầm terminal đang ghi dở.
             data = struct('acknowledged', false, 'verified', false, 'state', '', 'version', '', 'params', {cell(0, 2)}, ...
                           'records', struct('step', {}, 'execution', {}, 'geometry', {}, 'message', {}), 'reports', struct('label', {}, 'path', {}), 'objects', {{}});
             if ~isfile(path)

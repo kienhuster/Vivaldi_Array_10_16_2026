@@ -37,7 +37,7 @@ Muốn chạy solver trong bài test tích hợp, chủ động `setenv('VIVALDI
 
 ## Kết quả thực chạy ngày 20/10/2026
 
-- MISS_HIT 0.9.44: 21 tệp tự viết và 27 helper upstream được dùng, tổng48 tệp, không lỗi/cảnh báo.
+- MISS_HIT 0.9.44: 21 tệp tự viết và 28 helper upstream được dùng, tổng49 tệp, không lỗi/cảnh báo.
 - GNU Octave 9.4.0: 16 nhóm portable đạt trên mã refactor hiện tại; báo cáo hfss-api-portable-results.json.
 - 8 kịch bản VBS sinh thực: BOM UTF16, strings/ngoặc, số dòng vật lý/continuation và Sub/Function cân bằng đều đạt kiểm tra tĩnh; không coi là đã thực thi VBS.
 - Nguồn AEDT đúng SHA-256, 3285 khối cân bằng. 89 tệp upstream được đối chiếu hash; chỉ launcher có bản vá công khai.

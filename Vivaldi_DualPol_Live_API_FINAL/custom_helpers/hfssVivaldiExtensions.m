@@ -74,14 +74,14 @@ function hfssVivaldiExtensions(w, action, varargin)
             if create
                 independent = fieldnames(p);
                 order = [find(ismember(g.expressions(:, 1), independent)); find(~ismember(g.expressions(:, 1), independent))];
-                props = {'NAME:NewProps'};
+                % Helper NewProps của upstream được dùng cho cả literal và biểu thức.
                 for k = order(:)'
-                    props{end + 1} = {['NAME:' g.expressions{k, 1}], 'PropType:=', 'VariableProp', ...
-                                      'UserDef:=', true, 'Value:=', g.expressions{k, 2}}; %#ok<AGROW>
+                    name = g.expressions{k, 1};
+                    expression = g.expressions{k, 2};
+                    w.lib(@hfssSetVariable, {name, expression, ''}, {'Value', expression});
                 end
-                props{end + 1} = {'NAME:alpha', 'PropType:=', 'PostProcessingVariableProp', 'UserDef:=', true, 'Value:=', '0deg'};
-                a = {'NAME:AllTabs', {'NAME:LocalVariableTab', {'NAME:PropServers', 'LocalVariables'}, props}};
-                w.call(['oDesign.ChangeProperty ' w.literal(a)], 'Khai báo biến độc lập và biểu thức dẫn xuất');
+                w.lib(@hfssSetVariable, {'alpha', '0deg', ''}, ...
+                      {'Value', '0deg'; 'PropType', 'PostProcessingVariableProp'});
             else
                 % Update chỉ gọi helper cho các biến thật sự thay đổi; giữ 17 chữ số.
                 [~, meta] = vivaldiDefaultParams();

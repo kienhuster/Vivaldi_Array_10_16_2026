@@ -15,6 +15,7 @@ Các helper cũ chủ yếu nhận số và ghi `%f` hoặc `%.4f`. Adapter gi�
 | hfssAssignMaterial, hfssAssignLumpedPort, hfssAssignRadiation | Vật liệu/cổng/biên; sửa SolveInside aluminum=false và signature impedance 2021 |
 | hfssInsertSolution | Adaptive setup với đầy đủ 8 arguments, giữ 5GHz/.02/min5/max50/conv3/refine10 |
 | hfssInsertFarFieldSphereSetup | Giữ dữ liệu helper, đổi method Automation thành InsertInfiniteSphereSetup cho 2021 R2 |
+| hfssSetVariable | Tạo cả biến độc lập và biểu thức dẫn xuất; adapter giữ Value chính xác và PropType riêng của alpha |
 | hfssVariableChange | Chỉ các independent variables thay đổi; không làm tròn 6 chữ số |
 | hfssSaveProject | Chỉ lưu shell mới và Save As có chủ đích; Save thường dùng oProject.Save vì helper luôn SaveAs |
 | hfssSolveSetup | Gọi helper, chuyển Solve(Array) cũ sang Analyze "Setup1"; không AnalyzeAll |
