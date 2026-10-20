@@ -32,3 +32,9 @@ __pycache__/
 *.key
 .DS_Store
 Thumbs.db
+
+# Build-only output and unique filename reservations
+/Vivaldi_DualPol_Builder/output/
+/Vivaldi_DualPol_Builder.zip
+/Vivaldi_DualPol_Builder_ZIP_INTEGRITY.json
+*.aedt.reserve/

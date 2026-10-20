@@ -1,0 +1,289 @@
+# YÊU CẦU CODEX — ĐƠN GIẢN HÓA VIVALDI DUAL-POL BUILDER, CHỈ DỰNG ANTEN MỚI
+
+## 1. Thay đổi mục tiêu phần mềm
+
+Tôi quyết định thay đổi kiến trúc hiện tại.
+
+**BỎ HOÀN TOÀN CHỨC NĂNG LIVE UPDATE VÀ QUẢN LÝ WORKING PROJECT.**
+
+Mục tiêu duy nhất ở giai đoạn này là:
+
+**MATLAB nhận các kích thước người dùng nhập → tính hình học → sử dụng thư viện yuip/hfss-api → dựng hoàn toàn một anten Vivaldi Dual-Pol mới từ HFSS Project trống → lưu thành một file `.aedt` mới.**
+
+Mỗi lần người dùng nhấn **Tạo anten HFSS**, phải tạo một project mới với tên file khác, không ghi đè project đã tồn tại.
+
+Không tạo project tự động chỉ vì người dùng mở MATLAB GUI.
+
+## 2. Nguồn và thư viện
+
+Repository dự án:
+
+https://github.com/kienhuster/Vivaldi_Array_10_16_2026
+
+Thư viện chính:
+
+https://github.com/yuip/hfss-api
+
+Nguồn hình học chuẩn:
+
+- `17_10_2026_vivaldi.aedt`
+- `Phan_tich_chi_tiet_Vivaldi_dual_pol_17_10_2026.md`
+
+File AEDT nguồn chỉ được sử dụng làm tham chiếu hình học. Không được sao chép nguyên mô hình nguồn rồi gọi đó là Build From Scratch.
+
+Phải sử dụng trực tiếp những hàm đã có của `hfss-api`, với phong cách lập trình giống các example Dipole, Horn và Patch.
+
+Ví dụ:
+
+```matlab
+fid = fopen(scriptPath, 'wt');
+
+hfssNewProject(fid);
+hfssInsertDesign(fid, 'Vivaldi_DualPol');
+
+% Các hàm dựng CAD thực sự
+hfssRectangle(fid, ...);
+hfssSubtract(fid, ...);
+hfssUnite(fid, ...);
+
+% Các bước hình học và solver còn lại
+
+hfssSaveProject(fid, projectPath, true);
+fclose(fid);
+```
+
+Đoạn trên chỉ minh họa cấu trúc; khi lập trình phải truyền đầy đủ tham số đúng chữ ký hàm.
+
+Không sử dụng nhiều lớp ScriptWriter/Runtime không cần thiết nếu có thể gọi helper thư viện trực tiếp một cách rõ ràng.
+
+## 3. Bỏ chức năng không cần thiết
+
+Loại bỏ khỏi giao diện và luồng thực thi:
+
+- Update HFSS.
+- Update Geometry.
+- Live Update.
+- Working Project Manager.
+- Restore Last Valid Parameters.
+- Last Saved Parameters.
+- Cơ chế rollback cập nhật biến.
+- Theo dõi unsaved changes phức tạp.
+- Các chức năng sao chép AEDT gốc thành Working Project.
+- Những lớp COM Adapter không còn được sử dụng.
+
+Chỉ xóa code khi đã kiểm tra không có chức năng thiết yếu nào còn phụ thuộc vào nó.
+
+Không xóa các công thức hình học hoặc helper CAD cần thiết.
+
+## 4. Quy trình dựng anten bắt buộc
+
+Dựng chính xác hình học Dual-Pol:
+
+1. Khai báo các design variables.
+2. Tạo Coordinate Systems.
+3. Tạo hai EquationBasedSurfaces.
+4. Clone và Subtract đoạn flare ngắn.
+5. Rotate transition theo góc mặc định 21°.
+6. Tạo ba Rectangle tạo khe và cavity.
+7. Unite vùng khoét.
+8. Tạo tấm kim loại Vivaldi_1.
+9. Subtract vùng flare và cavity khỏi tấm kim loại.
+10. SheetThicken với BothSides=true.
+11. DuplicateAroundAxis −90° tạo phân cực thứ hai.
+12. Dựng khối nối và đế.
+13. Unite thân nhôm.
+14. Tạo hai coaxial feeds.
+15. Subtract các vùng coax cutter.
+16. Tạo hai Lumped Ports 50 Ω.
+17. Gán Radiation Boundary.
+18. Tạo Driven Modal Setup.
+19. Tạo Frequency Sweep.
+20. Validate hình học và thiết lập, sau đó lưu thành file AEDT mới.
+
+Không thay thế bằng anten Vivaldi trên FR4 hoặc hình học khác.
+
+Không được tạo ra hai tấm kim loại đặc không có vùng flare.
+
+## 5. Kích thước hoàn toàn tùy chỉnh
+
+Cho phép nhập các giá trị số thực tùy ý trong miền hình học hợp lệ.
+
+Giữ các biến:
+
+- L_flare_1
+- aperture_w
+- slot_feed_w
+- deg_slot_t
+- them
+- h3_slot_feed
+- h2
+- cavity_w
+- cavity_L
+- thickness
+- h_de
+- r_cabin
+- r_cabmid
+- r_cabout
+- positionx
+
+Và các biến liên quan cần thiết theo nguồn.
+
+Tự tính:
+
+- L_flare
+- r_flare
+- L_patch
+- x_feed
+- z_feed
+- Các hệ tọa độ và kích thước dẫn xuất.
+
+Không giới hạn tham số vào một vài preset.
+
+## 6. Cấu trúc mã MATLAB đơn giản
+
+Tham khảo phong cách chương trình `Standard_Vivaldi_GUI()` do tôi đã viết.
+
+Ưu tiên khoảng bốn file MATLAB chính:
+
+- `Vivaldi_GUI.m` — giao diện.
+- `Vivaldi_Calculation.m` — công thức và kiểm tra tham số.
+- `Vivaldi_HFSS_Builder.m` — toàn bộ thứ tự dựng CAD bằng hfss-api.
+- `Vivaldi_HFSS_Simulation.m` — thiết lập và chạy mô phỏng, đọc kết quả.
+
+Có thể bổ sung một vài custom helpers nếu thư viện gốc chưa hỗ trợ.
+
+Không tự viết lại các helper HFSS đã có.
+
+Không tạo nhiều lớp trừu tượng hoặc file riêng cho từng nút GUI.
+
+Trong Builder, phải có các tiêu đề chú thích tiếng Việt, ví dụ:
+
+```matlab
+%% 1. Khởi tạo dự án HFSS mới
+%% 2. Khai báo các biến hình học
+%% 3. Tạo các hệ tọa độ
+%% 4. Dựng vùng flare
+%% 5. Tạo transition và cavity
+%% 6. Subtract vùng khoét
+%% 7. Tạo phần tử phân cực thứ hai
+%% 8. Tạo đế và coax
+%% 9. Gán cổng kích thích
+%% 10. Thiết lập solver
+%% 11. Kiểm tra và lưu file AEDT
+```
+
+Các hàm lớn phải có chú thích tiếng Việt rõ ràng.
+
+## 7. Giao diện tối giản
+
+Sử dụng giao diện tiếng Việt.
+
+Chỉ cần những chức năng chính:
+
+**Thông số anten**
+- Nhập kích thước.
+- Hiển thị thông số dẫn xuất.
+- Khôi phục mặc định.
+
+**Xem trước 3D**
+- Quan sát mô hình.
+
+**Tạo anten HFSS**
+- Chọn thư mục xuất.
+- Chọn đường dẫn Ansys.
+- Nút **Tạo anten HFSS**.
+- Nút **Mở file HFSS vừa tạo**.
+
+**Mô phỏng**
+- Nút **Chạy mô phỏng**.
+- Hiển thị kết quả thực.
+
+**Nhật ký**
+- Theo dõi tiến trình dựng hình.
+- Xem lỗi.
+
+Có thể kết hợp tab Tạo anten và Nhật ký nếu giao diện gọn hơn.
+
+Không cần nhiều nút trạng thái hay nút cập nhật cùng chức năng.
+
+## 8. Mỗi lần tạo phải sinh một file mới
+
+Ví dụ:
+
+`Vivaldi_DualPol_001.aedt`
+
+`Vivaldi_DualPol_002.aedt`
+
+`Vivaldi_DualPol_003.aedt`
+
+Tên có thể dùng số thứ tự hoặc timestamp.
+
+Trước khi lưu phải kiểm tra file chưa tồn tại. Nếu đã tồn tại thì tự chọn tên mới hoặc yêu cầu người dùng xác nhận đường dẫn khác; **không ghi đè**.
+
+Không sử dụng `hfssOpenProject` để lấy mô hình cũ làm mô hình mới.
+
+Sau khi xây dựng và Validate, lưu project.
+
+Nếu dựng lỗi thì báo lỗi; không báo file anten hoàn chỉnh khi chỉ mới tạo project trống.
+
+Không tự chạy mô phỏng ngay sau khi dựng CAD. Chỉ chạy khi người dùng chọn Chạy mô phỏng.
+
+## 9. Sửa lỗi VBScript đã phát sinh
+
+Phiên bản trước báo:
+
+`800a0408 — Invalid character — Line(1): ÿþO`
+
+Phải đảm bảo file VBScript xuất ra có mã hóa tương thích HFSS 2021 R2, không có BOM gây lỗi.
+
+Phân biệt mã hóa file script với file trạng thái.
+
+Không âm thầm làm hỏng ký tự trong đường dẫn Windows.
+
+Kiểm tra cú pháp và file script thực tế trước khi chạy HFSS.
+
+Sử dụng phương thức gọi helper tương tự các example của thư viện.
+
+## 10. Kiểm thử theo từng giai đoạn
+
+Bắt buộc kiểm tra theo trình tự:
+
+- Thư viện hfss-api được MATLAB nhận diện.
+- Tạo một project trống.
+- Dựng một Rectangle thử.
+- Tạo hai EquationBasedSurfaces.
+- Khoét thành công phần flare thứ nhất.
+- SheetThicken thành công.
+- Tạo phân cực thứ hai đúng 90°.
+- Tạo coax.
+- Tạo port.
+- Validate hình học.
+- Lưu file AEDT.
+
+Ưu tiên chạy và kiểm tra trong HFSS thật.
+
+Nếu không có HFSS trong môi trường Codex, ghi rõ các bài kiểm thử còn Pending.
+
+Không tuyên bố đã dựng thành công khi chưa kiểm chứng.
+
+## 11. GitHub
+
+Làm việc trong repository hiện tại nhưng tạo một nhánh phát triển mới.
+
+Giữ nguyên file `.aedt` nguồn và nhánh phiên bản hiện tại để đối chiếu.
+
+Sau khi hoàn thành, commit và push nhánh mới, tạo Pull Request để tôi kiểm tra.
+
+Không tự merge.
+
+## 12. Mục tiêu cuối
+
+Tôi muốn chương trình MATLAB có cách viết dễ hiểu giống `Standard_Vivaldi_GUI()` của tôi, sử dụng trực tiếp hàm thư viện `yuip/hfss-api`.
+
+**MỖI LẦN BẤM TẠO ANTEN HFSS → TẠO MỘT ANTEN DUAL-POL MỚI TỪ ĐẦU → LƯU THÀNH FILE `.aedt` MỚI.**
+
+Không Live Update, không Working Project, không rollback tham số, không phải quản lý COM session phức tạp.
+
+Ưu tiên chương trình gọn, đúng hình học, ít file và chạy ổn định trước khi phát triển thêm các tính năng nâng cao.
+
+Hãy trực tiếp chỉnh sửa code trên một nhánh mới, kiểm thử những gì có thể và bàn giao Pull Request.

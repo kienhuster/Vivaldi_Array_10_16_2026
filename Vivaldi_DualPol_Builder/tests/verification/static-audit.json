@@ -1,0 +1,97 @@
+{
+  "status": "PASS",
+  "ownMainFiles": 4,
+  "ownHelperMATLABFiles": 2,
+  "upstreamFilesVerified": 89,
+  "protectedFilesSHA256": {
+    "17_10_2026_vivaldi.aedt": "631820b2c07f457fd22f5cdab2aeae15694788c869629935460b2cefda1ba619",
+    "Phan_tich_chi_tiet_Vivaldi_dual_pol_17_10_2026.md": "49c5cbc0bc445e9bad6df008d9487f987c5db99cee7aca567fed0b205ad6e912"
+  },
+  "generatedScripts": [
+    {
+      "file": "/tmp/vivaldi-build-only-release/scripts/oct-M7tGME/build.vbs",
+      "bytes": 329202,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-build-only-release/scripts/oct-7hONmH/build.vbs",
+      "bytes": 332365,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-build-only-release/scripts/oct-7SY06E/build.vbs",
+      "bytes": 24757,
+      "maxPhysicalLine": 852,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-build-only-release/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-PHXe6x/build.vbs",
+      "bytes": 333038,
+      "maxPhysicalLine": 889,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-build-only-release/encoding.vbs",
+      "bytes": 14321,
+      "maxPhysicalLine": 519,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-build-only-release/simulate.vbs",
+      "bytes": 73609,
+      "maxPhysicalLine": 898,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-build-only-release/collision/scripts/oct-R5XZIH/build.vbs",
+      "bytes": 24807,
+      "maxPhysicalLine": 852,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    }
+  ],
+  "scope": "Static only; Windows compiler, GUI and HFSS remain PENDING."
+}
