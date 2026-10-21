@@ -2,10 +2,12 @@ function out = Vivaldi_HFSS_Builder(action, varargin)
 % Mục đích: mỗi lần tạo dựng CAD từ project trống và lưu một AEDT mới.
 % generate chỉ sinh script; launch/poll cần HFSS thật, không coi exit code là thành công.
 root = fileparts(mfilename('fullpath'));
-addpath(fullfile(root, 'custom_helpers'));
-apiRoot = fullfile(root, 'third_party', 'hfss-api');
-addpath(apiRoot); hfssIncludePaths([apiRoot filesep]);
+if ismember(action, {'initialize', 'generate', 'simulate', 'launch', 'open'})
+    library = initializeLibrary(root);
+end
 switch action
+    case 'initialize'
+        out = library;
     case 'generate'
         p = varargin{1}; folder = varargin{2};
         [ok, errors] = Vivaldi_Calculation('validate', p);
@@ -177,7 +179,7 @@ assert(~isempty(path), 'Vivaldi:Path', 'Đường dẫn không được rỗng.'
 path = char(path);
 if exist('OCTAVE_VERSION', 'builtin')
     path = make_absolute_filename(path);
-    if isfolder(path), path = canonicalize_file_name(path); end
+    if isfolder(path) || isfile(path), path = canonicalize_file_name(path); end
 else
     file = javaObject('java.io.File', path); path = char(file.getCanonicalPath());
 end
@@ -625,4 +627,118 @@ logPath = [path '.syntax.log'];
 launcher.redirectOutput(javaObject('java.io.File', logPath));
 process = launcher.start(); code = process.waitFor();
 assert(code == 0, 'Vivaldi:ScriptSyntax', 'Compiler VBScript từ chối script; xem %s.', logPath);
+end
+
+function library = initializeLibrary(root)
+% Mục đích: khai báo tường minh thư mục/file và chặn helper ngoài bản đi kèm dự án.
+% Kiểm tra đủ file trước khi sửa path; không genpath, không nạp examples/tests/reference.
+apiRoot = fullfile(root, 'third_party', 'hfss-api');
+paths = struct('root', root, 'apiRoot', apiRoot, ...
+    'general', fullfile(apiRoot, 'general'), ...
+    'modeler3d', fullfile(apiRoot, '3dmodeler'), ...
+    'boundary', fullfile(apiRoot, 'boundary'), ...
+    'analysis', fullfile(apiRoot, 'analysis'), ...
+    'radiation', fullfile(apiRoot, 'radiation'), ...
+    'reporter', fullfile(apiRoot, 'reporter'), ...
+    'mesh', fullfile(apiRoot, 'mesh'), ...
+    'fieldsCalculator', fullfile(apiRoot, 'fieldsCalculator'), ...
+    'customHelpers', fullfile(root, 'custom_helpers'));
+apiHelpers = { ...
+    'hfssNewProject', paths.general; ...
+    'hfssInsertDesign', paths.general; ...
+    'hfssOpenProject', paths.general; ...
+    'hfssSetDesign', paths.general; ...
+    'hfssSetVariable', paths.general; ...
+    'hfssSaveProject', paths.general; ...
+    'hfssExecuteScript', paths.general; ...
+    'hfssRectangle', paths.modeler3d; ...
+    'hfssBox', paths.modeler3d; ...
+    'hfssCylinder', paths.modeler3d; ...
+    'hfssCircle', paths.modeler3d; ...
+    'hfssSubtract', paths.modeler3d; ...
+    'hfssUnite', paths.modeler3d; ...
+    'hfssRotate', paths.modeler3d; ...
+    'hfssMove', paths.modeler3d; ...
+    'hfssCreateRelativeCS', paths.modeler3d; ...
+    'hfssSetWCS', paths.modeler3d; ...
+    'hfssThickenSheet', paths.modeler3d; ...
+    'hfssAssignMaterial', paths.modeler3d; ...
+    'hfssAssignLumpedPort', paths.boundary; ...
+    'hfssAssignRadiation', paths.boundary; ...
+    'hfssInsertSolution', paths.analysis; ...
+    'hfssSolveSetup', paths.analysis; ...
+    'hfssInsertFarFieldSphereSetup', paths.radiation; ...
+    'hfssCreateReport', paths.reporter; ...
+    'hfssExportToFile', paths.reporter};
+projectHelpers = {'hfssVivaldiScript', paths.customHelpers; ...
+    'vivaldiPreview3D', paths.customHelpers; ...
+    'Vivaldi_GUI', root; 'Vivaldi_Calculation', root; 'Vivaldi_HFSS_Simulation', root};
+helpers = [apiHelpers; projectHelpers];
+for name = fieldnames(paths)'
+    expected = paths.(name{1});
+    if ~isfolder(expected)
+        error('Vivaldi:LibraryFolderMissing', ...
+            'Thiếu thư mục %s. Mong đợi: %s. MATLAB đang nhận: <không áp dụng cho thư mục>.', name{1}, expected);
+    end
+end
+for k = 1:size(helpers, 1)
+    name = helpers{k, 1}; expected = fullfile(helpers{k, 2}, [name '.m']);
+    if ~isfile(expected)
+        error('Vivaldi:LibraryFileMissing', 'Thiếu helper %s. Mong đợi: %s. MATLAB đang nhận: %s.', ...
+            name, expected, resolvedName(name));
+    end
+end
+runtime = fullfile(paths.customHelpers, 'hfssVivaldiChecks.vbs');
+if ~isfile(runtime)
+    error('Vivaldi:LibraryFileMissing', ...
+        'Thiếu hfssVivaldiChecks.vbs. Mong đợi: %s. MATLAB đang nhận: <đọc trực tiếp file, không tra bằng which>.', runtime);
+end
+% Phát hiện bản đang nhận nhầm trước addpath, không âm thầm che thư viện khác.
+for k = 1:size(helpers, 1)
+    actual = which(helpers{k, 1});
+    if ~isempty(actual), requireHelperPath(helpers{k, 1}, fullfile(helpers{k, 2}, [helpers{k, 1} '.m']), actual); end
+end
+originalPath = path;
+try
+    current = strsplit(path, pathsep);
+    for name = fieldnames(paths)'
+        folder = paths.(name{1});
+        if ~any(strcmp(current, folder))
+            addpath(folder, '-begin'); current{end + 1} = folder; %#ok<AGROW>
+        end
+    end
+    resolved = cell(size(helpers, 1), 2);
+    for k = 1:size(helpers, 1)
+        name = helpers{k, 1}; expected = fullfile(helpers{k, 2}, [name '.m']); actual = which(name);
+        requireHelperPath(name, expected, actual);
+        resolved(k, :) = {name, actual};
+    end
+catch err
+    path(originalPath); rethrow(err);
+end
+library = struct('paths', paths, 'apiHelpers', {apiHelpers}, 'projectHelpers', {projectHelpers}, ...
+    'resolved', {resolved}, 'runtimeFile', runtime);
+end
+
+function requireHelperPath(name, expected, actual)
+% Mục đích: so sánh đường dẫn file thực, kể cả helper trùng tên ở Current Folder.
+if isempty(actual)
+    same = false;
+else
+    same = isfile(actual);
+    if same
+        if ispc, same = strcmpi(canonical(expected), canonical(actual));
+        else, same = strcmp(canonical(expected), canonical(actual)); end
+    end
+end
+if ~same
+    if isempty(actual), actual = '<không tìm thấy>'; end
+    error('Vivaldi:LibraryConflict', 'Helper %s không đúng phiên bản. Mong đợi: %s. MATLAB đang nhận: %s.', name, expected, actual);
+end
+end
+
+function actual = resolvedName(name)
+% Mục đích: hiển thị rõ kết quả which ngay cả khi file không có trong bản dự án.
+actual = which(name);
+if isempty(actual), actual = '<không tìm thấy>'; end
 end

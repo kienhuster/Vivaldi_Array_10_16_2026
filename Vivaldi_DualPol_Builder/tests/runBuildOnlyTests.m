@@ -1,9 +1,18 @@
-function report = runBuildOnlyTests(folder)
+function report = runBuildOnlyTests(folder, selection)
 % Mục đích: kiểm tra công thức, script thật và guard; không giả lập CAD thành PASS.
 if nargin < 1, folder = tempname; end
+if nargin < 2, selection = 'all'; end
+assert(ismember(selection, {'all', 'library'}), 'Vivaldi:Test', 'Nhóm kiểm tra không hợp lệ.');
 if ~isfolder(folder), mkdir(folder); end
 root = fileparts(fileparts(mfilename('fullpath'))); addpath(root);
-checks = {}; scripts = {};
+checks = checkLibraryPaths(root, folder); scripts = {};
+if strcmp(selection, 'library')
+    report = struct('status', 'PASS', 'runtime', version, 'count', numel(checks), 'checks', {checks}, ...
+        'scope', 'Kiểm tra path/file/which và fixture; không chạy GUI hoặc HFSS.', 'MATLAB_GUI', 'PENDING', 'HFSS_CAD', 'PENDING');
+    fid = fopen(fullfile(folder, 'library-path-tests.json'), 'w', 'n', 'UTF-8');
+    fprintf(fid, '%s\n', jsonencode(report)); fclose(fid);
+    fprintf('PASS: %d nhóm kiểm tra đường dẫn thư viện.\n', numel(checks)); return
+end
 [p, meta] = Vivaldi_Calculation('defaults');
 [ok, errors, ~, g] = Vivaldi_Calculation('validate', p);
 assert(ok && isempty(errors) && numel(meta) == 19);
@@ -169,4 +178,101 @@ function writeStatus(path, text)
 % Mục đích: tạo status fixture UTF-16LE rõ nguồn, không phải log HFSS thực.
 fid = fopen(path, 'wb'); fwrite(fid, uint8([255 254]), 'uint8');
 fwrite(fid, unicode2native(text, 'UTF-16LE'), 'uint8'); fclose(fid);
+end
+
+function checks = checkLibraryPaths(root, folder)
+% Mục đích: kiểm tra thiếu/xung đột bằng bản sao riêng; không đổi thư viện thật.
+checks = {}; library = Vivaldi_HFSS_Builder('initialize');
+assert(size(library.apiHelpers, 1) == 26);
+for k = 1:size(library.resolved, 1)
+    name = library.resolved{k, 1};
+    assert(strcmp(which(name), library.resolved{k, 2}) && isfile(library.resolved{k, 2}));
+end
+checks{end + 1} = 'Đủ 26 helper upstream và custom helpers nhận đúng file tuyệt đối';
+oldPath = path; oldFolder = pwd; temporary = tempname(folder); mkdir(temporary);
+cleanup = onCleanup(@()restoreLibraryTestState(oldPath, oldFolder, temporary)); %#ok<NASGU>
+cd(temporary);
+repeated = Vivaldi_HFSS_Builder('initialize');
+assert(strcmp(repeated.paths.root, root));
+assert(strcmp(path, oldPath));
+checks{end + 1} = 'Khởi tạo ngoài Current Folder và gọi lại không thay đổi path';
+
+rmpath(library.paths.modeler3d); beforePoll = path;
+poll = struct('id', 'path-test', 'statusPath', fullfile(temporary, 'no-status.txt'), 'state', 'SCRIPT_READY');
+poll = Vivaldi_HFSS_Builder('poll', poll);
+assert(strcmp(path, beforePoll) && strcmp(poll.state, 'SCRIPT_READY'));
+Vivaldi_HFSS_Builder('initialize');
+checks{end + 1} = 'Timer poll không addpath hoặc khởi tạo thư viện lại';
+
+shadow = fullfile(temporary, 'shadow'); mkdir(shadow);
+shadowFile = fullfile(shadow, 'hfssRectangle.m');
+fid = fopen(shadowFile, 'w');
+fprintf(fid, 'function hfssRectangle(varargin)\nerror(''Vivaldi:ShadowExecuted'',''Shadow must never execute'');\nend\n'); fclose(fid);
+clear hfssRectangle;
+addpath(shadow, '-begin'); beforeFailure = path;
+expectLibraryError(@()Vivaldi_HFSS_Builder('initialize'), 'Vivaldi:LibraryConflict', ...
+    {'hfssRectangle', fullfile(library.paths.modeler3d, 'hfssRectangle.m'), shadowFile});
+assert(strcmp(path, beforeFailure));
+rmpath(shadow); clear hfssRectangle;
+cd(shadow); beforeFailure = path;
+expectLibraryError(@()Vivaldi_HFSS_Builder('initialize'), 'Vivaldi:LibraryConflict', ...
+    {'hfssRectangle', fullfile(library.paths.modeler3d, 'hfssRectangle.m'), shadowFile});
+assert(strcmp(path, beforeFailure)); cd(temporary); clear hfssRectangle;
+checks{end + 1} = 'Phát hiện shadow trên path và Current Folder, báo tên/mong đợi/which';
+
+fixture = fullfile(temporary, 'fixture'); mkdir(fixture);
+% Chỉ sao chép mã cần kiểm tra, không copy output, references hoặc dữ liệu HFSS của người dùng.
+mkdir(fullfile(fixture, 'third_party'));
+copyfile(library.paths.apiRoot, fullfile(fixture, 'third_party', 'hfss-api'));
+copyfile(library.paths.customHelpers, fullfile(fixture, 'custom_helpers'));
+for name = {'Vivaldi_HFSS_Builder.m', 'Vivaldi_GUI.m', 'Vivaldi_Calculation.m', 'Vivaldi_HFSS_Simulation.m'}
+    copyfile(fullfile(root, name{1}), fullfile(fixture, name{1}));
+end
+source = fileread(fullfile(fixture, 'Vivaldi_HFSS_Builder.m'));
+source = strrep(source, 'function out = Vivaldi_HFSS_Builder(action, varargin)', 'function out = FixtureHFSSBuilder(action, varargin)');
+fid = fopen(fullfile(fixture, 'FixtureHFSSBuilder.m'), 'w', 'n', 'UTF-8'); fprintf(fid, '%s', source); fclose(fid);
+addpath(fixture, '-end');
+% Từng thư mục bắt buộc đều bị phát hiện trước bất kỳ sửa đổi path nào.
+for name = {'apiRoot', 'general', 'modeler3d', 'boundary', 'analysis', 'radiation', 'reporter', 'mesh', 'fieldsCalculator', 'customHelpers'}
+    relative = library.paths.(name{1})(numel(root) + 2:end);
+    expected = fullfile(fixture, relative); hidden = [expected '_hidden'];
+    movefile(expected, hidden); beforeFailure = path;
+    expectLibraryError(@()FixtureHFSSBuilder('initialize'), 'Vivaldi:LibraryFolderMissing', {name{1}, expected});
+    assert(strcmp(path, beforeFailure)); movefile(hidden, expected);
+end
+checks{end + 1} = 'Phát hiện từng thư mục bắt buộc bị thiếu; không thay đổi path khi lỗi';
+
+missing = {fullfile('third_party', 'hfss-api', 'general', 'hfssNewProject.m'), ...
+    fullfile('third_party', 'hfss-api', '3dmodeler', 'hfssRectangle.m'), ...
+    fullfile('custom_helpers', 'hfssVivaldiScript.m'), fullfile('custom_helpers', 'vivaldiPreview3D.m'), ...
+    fullfile('custom_helpers', 'hfssVivaldiChecks.vbs')};
+for k = 1:numel(missing)
+    expected = fullfile(fixture, missing{k}); hidden = [expected '.hidden'];
+    movefile(expected, hidden); beforeFailure = path;
+    [~, name, extension] = fileparts(expected);
+    expectLibraryError(@()FixtureHFSSBuilder('initialize'), 'Vivaldi:LibraryFileMissing', {[name extension], expected});
+    assert(strcmp(path, beforeFailure)); movefile(hidden, expected);
+end
+checks{end + 1} = 'Phát hiện thiếu file API, hai custom helper và runtime VBS bằng đường dẫn đầy đủ';
+end
+
+function expectLibraryError(callback, identifier, fragments)
+% Mục đích: lỗi phải đúng loại và nêu đủ tên/đường dẫn, không chỉ báo thất bại chung.
+try
+    callback();
+catch err
+    assert(strcmp(err.identifier, identifier), '%s: %s', err.identifier, err.message);
+    for k = 1:numel(fragments)
+        assert(~isempty(strfind(err.message, fragments{k})), '%s', err.message); %#ok<STREMP>
+    end
+    return
+end
+error('Vivaldi:Test', 'Thiếu lỗi thư viện dự kiến %s.', identifier);
+end
+
+function restoreLibraryTestState(oldPath, oldFolder, temporary)
+% Mục đích: trả nguyên path/Current Folder và xóa chỉ fixture độc lập của kiểm thử.
+cd(oldFolder); path(oldPath);
+clear hfssRectangle FixtureHFSSBuilder;
+if isfolder(temporary), rmdir(temporary, 's'); end
 end

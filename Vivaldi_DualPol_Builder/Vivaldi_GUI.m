@@ -2,7 +2,9 @@ function fig = Vivaldi_GUI(varargin)
 % Mục đích: nhập kích thước, xem trước và chủ động dựng một anten HFSS mới mỗi lần bấm.
 % Không tạo/mở project lúc khởi động; không có Live Update hoặc Working Project.
 root = fileparts(mfilename('fullpath'));
-addpath(fullfile(root, 'custom_helpers'));
+library = Vivaldi_HFSS_Builder('initialize');
+assert(strcmp(library.paths.root, root), 'Vivaldi:LibraryConflict', ...
+    'Builder không cùng thư mục GUI. Mong đợi: %s. MATLAB đang nhận: %s.', root, library.paths.root);
 [p, meta] = Vivaldi_Calculation('defaults');
 job = []; built = []; busy = false; lastLog = ''; warned = false;
 jobTimer = []; %#ok<NASGU>

@@ -70,7 +70,9 @@ def main():
     assert "'Limits', [-Inf Inf]" in gui
     # Không launch khi tạo GUI: các lệnh chỉ được đặt trong nested callback.
     setup = gui[:gui.index('    function parameterChanged')]
-    assert "Vivaldi_HFSS_Builder('" not in setup and 'hfssExecuteScript(' not in setup
+    assert re.findall(r"Vivaldi_HFSS_Builder\('([^']+)'", setup) == ['initialize']
+    assert setup.index("Vivaldi_HFSS_Builder('initialize')") < setup.index('uifigure(')
+    assert 'hfssExecuteScript(' not in setup
     own = list(ROOT.glob('*.m')) + list((ROOT/'custom_helpers').glob('*.m'))
     assert len(own) == 6 and len(list(ROOT.glob('*.m'))) == 4
     for file in own:
@@ -88,11 +90,30 @@ def main():
         assert f'HasName(ObjectNames(),"{surface}")' not in builder
         assert f'HasName(sbObjects,"{surface}")' in builder
     assert builder.count('sbObjects = QueryGroup("Sheets")') == 2
+    # Danh sách khai báo phải phủ đúng mọi helper thực sự được gọi, không đoán thư mục.
+    simulation = (ROOT/'Vivaldi_HFSS_Simulation.m').read_text()
+    used = set(re.findall(r'@(hfss\w+)', builder + simulation)) | {'hfssExecuteScript'}
+    mapping = dict(re.findall(r"'(hfss\w+)', paths\.(\w+)", builder))
+    assert len(used) == 26 and used <= set(mapping)
+    folders = {'general':'general', 'modeler3d':'3dmodeler', 'boundary':'boundary',
+               'analysis':'analysis', 'radiation':'radiation', 'reporter':'reporter'}
+    readme = (ROOT/'README_TIENG_VIET.md').read_text()
+    for name in used:
+        folder = folders[mapping[name]]
+        file = ROOT/'third_party/hfss-api'/folder/(name+'.m')
+        assert file.is_file()
+        assert f'| `{name}` | `third_party/hfss-api/{folder}` | `{name}.m` |' in readme
+        source = '\n'.join(line for line in file.read_text().splitlines() if not line.lstrip().startswith('%'))
+        assert set(re.findall(r'\b(hfss\w+)\s*\(', source)) - {name} <= used
+    preamble = builder[:builder.index('switch action')]
+    assert "{'initialize', 'generate', 'simulate', 'launch', 'open'}" in preamble
+    assert 'addpath(' not in preamble and 'hfssIncludePaths(' not in builder
+    assert not re.search(r'\bgenpath\s*\(', builder + simulation + gui)
     result = json.loads(args.results.read_text())
     scripts = [audit_script(Path(path)) for path in result['scripts']]
     scripts.extend(audit_script(path) for path in args.extra_script)
     report = {'status': 'PASS', 'ownMainFiles': 4, 'ownHelperMATLABFiles': 2,
-              'upstreamFilesVerified': 89, 'protectedFilesSHA256': PROTECTED,
+              'upstreamFilesVerified': 89, 'mappedHFSSHelpers': len(used), 'libraryPreflight': 'PASS (static coverage)', 'protectedFilesSHA256': PROTECTED,
               'generatedScripts': scripts, 'HFSSCheckpointStatus': {f'CHECK_{k:02d}': 'PENDING' for k in range(1, 19)}, 'WindowsQueryFixtures': 'PENDING', 'scope': 'Static only; Windows compiler, GUI and HFSS remain PENDING.'}
     (ROOT/'tests/verification/static-audit.json').write_text(json.dumps(report, indent=2)+'\n')
     print(json.dumps({'status': 'PASS', 'scripts': len(scripts), 'ownMATLABFiles': len(own)}))

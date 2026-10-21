@@ -39,3 +39,11 @@ cscript //nologo tests\testRuntimeQueries.vbs custom_helpers\hfssVivaldiChecks.v
 ```
 
 Fixture chỉ dùng FakeEditor/FakeProject, không tạo hay validate CAD HFSS. Test này chưa được chạy ở Cloud và không thay thế runHFSSBuildIntegration trên HFSS thật.
+
+## Kiểm tra đường dẫn thư viện
+
+Kiểm thử dùng bản sao riêng trong thư mục tạm: kiểm tra đủ 26 helper; gọi khởi tạo ngoài Current Folder và lặp lại không đổi path; poll không thêm đường dẫn; phát hiện hfssRectangle bị shadow trên path/Current Folder; phát hiện thiếu từng thư mục API/custom và các file API/helper/VBS. Lỗi phải có tên và đường dẫn mong đợi/đang nhận. Không sửa/xóa file thư viện thật trong quá trình kiểm thử.
+
+Audit Python đối chiếu toàn bộ function handle/lời gọi upstream với bảng manifest trong Builder, vị trí file thật, bảng README và cả lời gọi phụ thuộc bên trong helper. GUI có test dừng trước uifigure khi thư viện xung đột; test GUI MATLAB này chưa chạy ở Cloud. CAD/API/solver HFSS 2021 R2 vẫn PENDING.
+
+Có thể chạy riêng các kiểm tra đường dẫn bằng `runBuildOnlyTests(tempname, 'library')`; fixture chỉ sao chép mã thư viện và bốn module, không sao chép output/reference hoặc dữ liệu mô phỏng của người dùng.

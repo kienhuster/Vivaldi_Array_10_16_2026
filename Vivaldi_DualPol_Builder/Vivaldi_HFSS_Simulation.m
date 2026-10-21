@@ -1,6 +1,9 @@
 function out = Vivaldi_HFSS_Simulation(action, varargin)
     % Mục đích: dùng helper gốc để cấu hình solver/port/report; không tự chạy khi đổi số.
     % Dữ liệu chỉ được xuất sau truy vấn nghiệm thực tại nominal variation hiện tại.
+    if ismember(action, {'create', 'apply', 'run', 'reports'})
+        Vivaldi_HFSS_Builder('initialize');
+    end
     out = [];
     switch action
         case 'defaults'

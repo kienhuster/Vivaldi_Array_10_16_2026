@@ -38,3 +38,52 @@ Hai tệp nguồn ngày17/10 ở repository root và reference được bảo to
 Mã kết hợp dùng GPL-2.0-or-later; giữ nguyên COPYING/NOTICE và thông tin tác giả upstream. MATLAB/Ansys và dữ liệu người dùng giữ quyền tương ứng.
 
 Bản vá CHECK_02/03 tách truy vấn Sheets khỏi phép dựng mặt; xem mục lỗi450 trong [chẩn đoán](docs/TROUBLESHOOTING.md). Checkbox lưu CAD debug tạo file INCOMPLETE riêng khi lỗi; không phải anten hoàn chỉnh. CAD thực tế của bản vá còn Pending.
+
+## Đường dẫn thư viện được kiểm tra tường minh
+
+Root được lấy từ `fileparts(mfilename('fullpath'))`, không phụ thuộc Current Folder. `Vivaldi_HFSS_Builder('initialize')` trả về các đường dẫn tuyệt đối và kết quả `which()` đã xác minh. GUI chạy khởi tạo trước khi tạo cửa sổ; lỗi thư viện ngăn tạo anten. Sinh script/chạy HFSS kiểm tra lại, còn timer `poll` không addpath.
+
+Chỉ nạp root ứng dụng, `custom_helpers`, `third_party/hfss-api` và tám thư mục con `general`, `3dmodeler`, `boundary`, `analysis`, `radiation`, `reporter`, `mesh`, `fieldsCalculator`. Không gọi `genpath` hoặc phụ thuộc `hfssIncludePaths` nữa. Hai thư mục mesh/fieldsCalculator vẫn được kiểm tra tồn tại dù chưa có helper trực tiếp được dùng từ đó.
+
+Mọi thư mục/file phải qua `isfolder`/`isfile`; mỗi hàm phải được `which()` nhận đúng file trong bản dự án. Phát hiện bản ngoài dự án sẽ dừng với tên helper, đường dẫn mong đợi và đường dẫn đang nhận, không âm thầm che xung đột. Gỡ thư mục gây xung đột khỏi MATLAB path hoặc đổi Current Folder nếu nó chứa helper trùng tên, rồi mở GUI lại.
+
+| Hàm | Thư mục tính từ `Vivaldi_DualPol_Builder` | File chính xác |
+|---|---|---|
+| `hfssAssignLumpedPort` | `third_party/hfss-api/boundary` | `hfssAssignLumpedPort.m` |
+| `hfssAssignMaterial` | `third_party/hfss-api/3dmodeler` | `hfssAssignMaterial.m` |
+| `hfssAssignRadiation` | `third_party/hfss-api/boundary` | `hfssAssignRadiation.m` |
+| `hfssBox` | `third_party/hfss-api/3dmodeler` | `hfssBox.m` |
+| `hfssCircle` | `third_party/hfss-api/3dmodeler` | `hfssCircle.m` |
+| `hfssCreateRelativeCS` | `third_party/hfss-api/3dmodeler` | `hfssCreateRelativeCS.m` |
+| `hfssCreateReport` | `third_party/hfss-api/reporter` | `hfssCreateReport.m` |
+| `hfssCylinder` | `third_party/hfss-api/3dmodeler` | `hfssCylinder.m` |
+| `hfssExecuteScript` | `third_party/hfss-api/general` | `hfssExecuteScript.m` |
+| `hfssExportToFile` | `third_party/hfss-api/reporter` | `hfssExportToFile.m` |
+| `hfssInsertDesign` | `third_party/hfss-api/general` | `hfssInsertDesign.m` |
+| `hfssInsertFarFieldSphereSetup` | `third_party/hfss-api/radiation` | `hfssInsertFarFieldSphereSetup.m` |
+| `hfssInsertSolution` | `third_party/hfss-api/analysis` | `hfssInsertSolution.m` |
+| `hfssMove` | `third_party/hfss-api/3dmodeler` | `hfssMove.m` |
+| `hfssNewProject` | `third_party/hfss-api/general` | `hfssNewProject.m` |
+| `hfssOpenProject` | `third_party/hfss-api/general` | `hfssOpenProject.m` |
+| `hfssRectangle` | `third_party/hfss-api/3dmodeler` | `hfssRectangle.m` |
+| `hfssRotate` | `third_party/hfss-api/3dmodeler` | `hfssRotate.m` |
+| `hfssSaveProject` | `third_party/hfss-api/general` | `hfssSaveProject.m` |
+| `hfssSetDesign` | `third_party/hfss-api/general` | `hfssSetDesign.m` |
+| `hfssSetVariable` | `third_party/hfss-api/general` | `hfssSetVariable.m` |
+| `hfssSetWCS` | `third_party/hfss-api/3dmodeler` | `hfssSetWCS.m` |
+| `hfssSolveSetup` | `third_party/hfss-api/analysis` | `hfssSolveSetup.m` |
+| `hfssSubtract` | `third_party/hfss-api/3dmodeler` | `hfssSubtract.m` |
+| `hfssThickenSheet` | `third_party/hfss-api/3dmodeler` | `hfssThickenSheet.m` |
+| `hfssUnite` | `third_party/hfss-api/3dmodeler` | `hfssUnite.m` |
+| `hfssVivaldiScript` | `custom_helpers` | `hfssVivaldiScript.m` |
+| `vivaldiPreview3D` | `custom_helpers` | `vivaldiPreview3D.m` |
+| Runtime CAD (đọc bằng đường dẫn đầy đủ) | `custom_helpers` | `hfssVivaldiChecks.vbs` |
+
+`hfssVivaldiExtensions` là hàm cục bộ trong `Vivaldi_HFSS_Builder.m`, không phải helper upstream hoặc một file cần thêm vào path. Không tạo file wrapper riêng cho nó.
+
+Có thể mở ứng dụng từ Current Folder khác bằng cách thêm riêng root ứng dụng:
+
+```matlab
+addpath('D:\Vivaldi_Array_10_16_2026\Vivaldi_DualPol_Builder');
+Vivaldi_GUI
+```

@@ -40,3 +40,23 @@ function closeIfValid(fig)
 % Mục đích: đóng qua callback để thu hồi timer kể cả khi test lỗi.
 if isvalid(fig), close(fig); end
 end
+
+function testLibraryFailureBeforeWindow(testCase)
+% Mục đích: khi helper bị shadow, GUI dừng trước uifigure và không tạo project.
+root = fileparts(fileparts(mfilename('fullpath'))); addpath(root);
+Vivaldi_HFSS_Builder('initialize');
+oldPath = path; temporary = tempname; mkdir(temporary);
+cleanup = onCleanup(@()restoreShadow(oldPath, temporary)); %#ok<NASGU>
+fid = fopen(fullfile(temporary, 'hfssRectangle.m'), 'w');
+fprintf(fid, 'function hfssRectangle(varargin)\nerror(''Vivaldi:ShadowExecuted'',''Unexpected'');\nend\n'); fclose(fid);
+clear hfssRectangle;
+addpath(temporary, '-begin'); before = findall(0, 'Type', 'figure');
+verifyError(testCase, @()Vivaldi_GUI('Visible', 'off'), 'Vivaldi:LibraryConflict');
+verifyEqual(testCase, findall(0, 'Type', 'figure'), before);
+end
+
+function restoreShadow(oldPath, temporary)
+% Mục đích: trả path nguyên trạng sau khi kiểm tra lỗi, kể cả khi assertion thất bại.
+path(oldPath); clear hfssRectangle;
+if isfolder(temporary), rmdir(temporary, 's'); end
+end

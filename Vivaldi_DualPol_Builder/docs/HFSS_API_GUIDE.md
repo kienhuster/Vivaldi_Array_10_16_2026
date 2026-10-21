@@ -11,3 +11,7 @@ Các helper thật được tái sử dụng: hfssRectangle, hfssBox, hfssCylind
 Phần thiếu được gộp ngay trong Builder/Simulation: EquationBasedSurface, DuplicateAroundAxis và đặt tên bằng inventory diff, parent/local CS, BothSides=true, vùng Radiation 20mm, Discrete Sweep, thuộc tính vật liệu/mesh nguồn và phép đo CAD. Coax giữ snapshot hình trụ đặc trước hollowing nên không gọi hfssHollowCylinder thay thứ tự nguồn.
 
 Thư viện upstream giữ nguyên 89 tệp và GPL; chỉ bản vá hfssExecuteScript kế thừa từ phiên bản trước được giữ. Hash/pin ở third_party/HFSS_API_PROVENANCE.json. Không có persistent COM trong MATLAB.
+
+## Khởi tạo và kiểm tra thư viện
+
+Hàm cục bộ initializeLibrary trong Vivaldi_HFSS_Builder khai báo từng thư mục, ánh xạ 26 helper upstream và kiểm tra which trước/sau khi thêm đường dẫn còn thiếu. GUI gọi action initialize trước uifigure. Builder không khởi tạo trong poll; Simulation kiểm tra trước create/apply/run/reports. File .vbs được kiểm tra isfile và luôn đọc bằng đường dẫn đầy đủ. Bảng từng helper/file nằm trong README_TIENG_VIET.md. Không gọi hfssIncludePaths hoặc genpath trong ứng dụng.

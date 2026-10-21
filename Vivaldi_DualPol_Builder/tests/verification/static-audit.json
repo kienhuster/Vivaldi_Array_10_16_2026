@@ -3,14 +3,16 @@
   "ownMainFiles": 4,
   "ownHelperMATLABFiles": 2,
   "upstreamFilesVerified": 89,
+  "mappedHFSSHelpers": 26,
+  "libraryPreflight": "PASS (static coverage)",
   "protectedFilesSHA256": {
     "17_10_2026_vivaldi.aedt": "631820b2c07f457fd22f5cdab2aeae15694788c869629935460b2cefda1ba619",
     "Phan_tich_chi_tiet_Vivaldi_dual_pol_17_10_2026.md": "49c5cbc0bc445e9bad6df008d9487f987c5db99cee7aca567fed0b205ad6e912"
   },
   "generatedScripts": [
     {
-      "file": "/tmp/vivaldi-query450-release/scripts/oct-4mstSP/build.vbs",
-      "bytes": 799457,
+      "file": "/tmp/vivaldi-library-path-verified/scripts/oct-cChjJq/build.vbs",
+      "bytes": 799560,
       "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -21,8 +23,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-query450-release/scripts/oct-FVmjse/build.vbs",
-      "bytes": 828187,
+      "file": "/tmp/vivaldi-library-path-verified/scripts/oct-k3A1T7/build.vbs",
+      "bytes": 828290,
       "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -33,8 +35,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-query450-release/scripts/oct-3Cqmhf/build.vbs",
-      "bytes": 47054,
+      "file": "/tmp/vivaldi-library-path-verified/scripts/oct-TnTvo8/build.vbs",
+      "bytes": 47157,
       "maxPhysicalLine": 852,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -45,9 +47,9 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-query450-release/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-VsqqYC/build.vbs",
-      "bytes": 807599,
-      "maxPhysicalLine": 882,
+      "file": "/tmp/vivaldi-library-path-verified/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-wqETfo/build.vbs",
+      "bytes": 808020,
+      "maxPhysicalLine": 886,
       "checks": [
         "ASCII/no BOM/NUL",
         "strings/parentheses",
@@ -57,8 +59,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-query450-release/encoding.vbs",
-      "bytes": 26637,
+      "file": "/tmp/vivaldi-library-path-verified/encoding.vbs",
+      "bytes": 26702,
       "maxPhysicalLine": 755,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -69,8 +71,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-query450-release/simulate.vbs",
-      "bytes": 142059,
+      "file": "/tmp/vivaldi-library-path-verified/simulate.vbs",
+      "bytes": 142637,
       "maxPhysicalLine": 898,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -81,20 +83,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-query450-release/collision/scripts/oct-lBW2Yk/build.vbs",
-      "bytes": 47207,
-      "maxPhysicalLine": 852,
-      "checks": [
-        "ASCII/no BOM/NUL",
-        "strings/parentheses",
-        "Sub/Function blocks",
-        "line/continuation limits",
-        "Unicode ChrW roundtrip"
-      ]
-    },
-    {
-      "file": "/tmp/vivaldi-query450-focused/scripts/oct-bekzFf/build.vbs",
-      "bytes": 47080,
+      "file": "/tmp/vivaldi-library-path-verified/collision/scripts/oct-LkZ9AA/build.vbs",
+      "bytes": 47257,
       "maxPhysicalLine": 852,
       "checks": [
         "ASCII/no BOM/NUL",
