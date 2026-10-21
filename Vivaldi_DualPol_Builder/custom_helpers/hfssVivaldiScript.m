@@ -11,9 +11,10 @@ w = struct('line', @line, 'call', @call, 'require', @require, 'stage', @stage, .
     'literal', @literal, 'finish', @finish, 'abort', @abort);
 line('Option Explicit');
 line('Dim oHfssApp, oDesktop, oProject, oDesign, oEditor, oModule, oMaterials, oBoundary, oSolutions, oReport');
-line('Dim fs, vStatusPath, vStage, vStageName, vCommand, vSaveDebug, vDebugPath, sbErr, sbSource, sbDesc, sbCondition, sbObjects, sbHasData, vOpened, vStream');
+line('Dim vBodyMaterial, fs, vStatusPath, vStage, vStageName, vCommand, vSaveDebug, vDebugPath, sbErr, sbSource, sbDesc, sbCondition, sbObjects, sbHasData, vOpened, vStream');
 line('Set fs = CreateObject("Scripting.FileSystemObject")');
 line(['vStatusPath = ' quote(statusPath)]);
+line('vBodyMaterial = "aluminum"');
 line('vStage = "BAT_DAU": vStageName = "Khởi tạo": vCommand = ""');
 line(['vSaveDebug = ' literal(saveDebug)]);
 line(['vDebugPath = ' quote(fullfile(fileparts(statusPath), 'CAD_DEBUG_INCOMPLETE.aedt'))]);

@@ -66,10 +66,11 @@ def main():
     assert len(provenance['upstreamFilesSHA256']) == 89
     assert (ROOT/'COPYING').read_bytes() == (ROOT/'third_party/hfss-api/COPYING').read_bytes()
     gui = (ROOT/'Vivaldi_GUI.m').read_text()
-    assert len(re.findall(r'= uitab\(', gui)) == 5 and gui.count('= uibutton(') == 6
+    setup = gui[:gui.index('    function openMatLibrary')]
+    assert len(re.findall(r'= uitab\(', gui)) == 5
+    assert len(re.findall(r'=\s*uibutton\(', setup)) == 7
     assert "'Limits', [-Inf Inf]" in gui
     # Không launch khi tạo GUI: các lệnh chỉ được đặt trong nested callback.
-    setup = gui[:gui.index('    function parameterChanged')]
     assert re.findall(r"Vivaldi_HFSS_Builder\('([^']+)'", setup) == ['initialize']
     assert setup.index("Vivaldi_HFSS_Builder('initialize')") < setup.index('uifigure(')
     assert 'hfssExecuteScript(' not in setup
@@ -109,6 +110,25 @@ def main():
     assert "{'initialize', 'generate', 'simulate', 'launch', 'open'}" in preamble
     assert 'addpath(' not in preamble and 'hfssIncludePaths(' not in builder
     assert not re.search(r'\bgenpath\s*\(', builder + simulation + gui)
+    initializer = builder[builder.index('function library = initializeLibrary'):]
+    assert not re.search(r'\bapiRoot\b|\brestoredefaultpath\b|\bsavepath\b', builder + simulation + gui)
+    for folder in ('boundary','3dmodeler','analysis','general','radiation','reporter','fieldsCalculator','mesh'):
+        assert f"addpath(fullfile(root, 'third_party', 'hfss-api', '{folder}'), '-begin');" in initializer
+    assert "addpath(fullfile(root, 'custom_helpers'), '-begin');" in initializer
+    assert initializer.index('addpath(') < initializer.index('actual = which(name)')
+    assert "'Editable','off','Tag','bodyMaterial'" in gui
+    for tag in ('materialLibrary','materialSearch','materialTable','addMaterial','materialOK','materialCancel','saveMaterial'):
+        assert f"'Tag','{tag}'" in gui
+    assert "'full', debugChoice.Value, selectedMaterial" in gui
+    assert "out.bodyMaterial = body" in builder and 'job.json' in builder
+    assert "out.bodyMaterial = built.bodyMaterial" in builder
+    assert "'MaterialValue:='" in builder and 'MaterialDefinitionMatches(' in builder
+    assert 'defaults = Array(1,1,0,0)' in runtime and 'MATERIAL_DEFAULT|' in runtime
+    assert 'manager.GetData(name)' in runtime and 'oMaterials.AddMaterial Array(' in runtime
+    calculation = (ROOT/'Vivaldi_Calculation.m').read_text()
+    assert 'Vivaldi:MaterialBody' in calculation and "{'metal','pec'}" in calculation
+    assert "save(temporary, 'customMaterials', 'schemaVersion', '-v7')" in calculation
+
     result = json.loads(args.results.read_text())
     scripts = [audit_script(Path(path)) for path in result['scripts']]
     scripts.extend(audit_script(path) for path in args.extra_script)

@@ -362,3 +362,85 @@ Sub CheckPoints(name, points)
   Next
   If count = 0 Then Err.Raise 513, "Vivaldi", "Plan kiểm tra không có điểm"
 End Sub
+
+Function DefinitionProperty(data, key)
+  Dim i, value
+  DefinitionProperty = Empty
+  If Not IsArray(data) Then Exit Function
+  For i = LBound(data) To UBound(data)
+    If IsArray(data(i)) Then
+      value = DefinitionProperty(data(i),key)
+      If Not IsEmpty(value) Then DefinitionProperty = value: Exit Function
+    ElseIf VarType(data(i)) = 8 Then
+      If LCase(CStr(data(i))) = LCase(key & ":=") And i < UBound(data) Then
+        DefinitionProperty = data(i+1): Exit Function
+      End If
+    End If
+  Next
+End Function
+Function DefinitionMatchesData(data, epsilon, mu, sigma, loss)
+  Dim keys, expected, defaults, i, value
+  keys = Array("permittivity","permeability","conductivity","dielectric_loss_tangent")
+  expected = Array(epsilon,mu,sigma,loss)
+  defaults = Array(1,1,0,0)
+  DefinitionMatchesData = False
+  ' Scalar HFSS defaults apply only to omitted keys of a valid definition.
+  ' A failed GetData, empty return or explicit nonnumeric/anisotropic value fails.
+  If Not IsArray(data) Then Exit Function
+  If UBound(data) < LBound(data) Then Exit Function
+  If VarType(data(LBound(data))) <> 8 Then Exit Function
+  If LCase(Left(CStr(data(LBound(data))),5)) <> "name:" Then Exit Function
+  For i = 0 To 3
+    value = DefinitionProperty(data,keys(i))
+    If IsEmpty(value) Then
+      value = defaults(i)
+      WriteStatus "MATERIAL_DEFAULT|" & keys(i) & "|" & CStr(value)
+    End If
+    If Not IsNumeric(value) Then Exit Function
+    If Abs(CDbl(value)-CDbl(expected(i))) > 0.000000001*(1+Abs(CDbl(expected(i)))) Then Exit Function
+  Next
+  DefinitionMatchesData = True
+End Function
+Function MaterialDefinitionMatches(name, epsilon, mu, sigma, loss)
+  Dim manager, data
+  TraceCommand "oMaterials.GetManager(Material).GetData / material=" & name
+  Set manager = oMaterials.GetManager("Material")
+  data = manager.GetData(name)
+  MaterialDefinitionMatches = DefinitionMatchesData(data,epsilon,mu,sigma,loss)
+End Function
+Sub EnsureMaterial(name, epsilon, mu, sigma, loss)
+  ' Uu tien dinh nghia co san neu doc va doi chieu duoc; khong EditMaterial.
+  Dim manager, data, number, source, description, existsInProject, readable
+  TraceCommand "oMaterials.GetProjectMaterialNames / material=" & name
+  existsInProject = HasName(oMaterials.GetProjectMaterialNames(),name)
+  Set manager = oMaterials.GetManager("Material")
+  TraceCommand "oMaterials.GetManager(Material).GetData / material=" & name
+  Err.Clear
+  On Error Resume Next
+  data = manager.GetData(name)
+  number = Err.Number: source = Err.Source: description = Err.Description
+  On Error GoTo 0
+  readable = False
+  If number = 0 Then
+    If IsArray(data) Then readable = (UBound(data) >= LBound(data))
+  End If
+  If number <> 0 Then
+    WriteStatus "MATERIAL_LOOKUP|" & name & "|" & CStr(number) & "|" & CleanLine(source) & "|" & CleanLine(description)
+    If existsInProject Then Err.Raise number, "GetData/" & name, description
+  End If
+  If readable Then
+    If Not DefinitionMatchesData(data,epsilon,mu,sigma,loss) Then Err.Raise 513, "EnsureMaterial", "Dinh nghia vat lieu co san khong khop; khong tu ghi de: " & name
+    WriteStatus "MATERIAL|REUSED_VERIFIED|" & name
+  Else
+    If existsInProject Then Err.Raise 513, "EnsureMaterial", "Khong doc duoc dinh nghia trong project: " & name
+    TraceCommand "oMaterials.AddMaterial / project definition=" & name
+    oMaterials.AddMaterial Array("NAME:" & name, "CoordinateSystemType:=", "Cartesian", "BulkOrSurfaceType:=", 1, Array("NAME:PhysicsTypes", "set:=", Array("Electromagnetic")), "permittivity:=", MaterialNumber(epsilon), "permeability:=", MaterialNumber(mu), "conductivity:=", MaterialNumber(sigma), "dielectric_loss_tangent:=", MaterialNumber(loss))
+    WriteStatus "MATERIAL|PROJECT_DEFINITION_CREATED|" & name
+  End If
+  If Not MaterialDefinitionMatches(name,epsilon,mu,sigma,loss) Then Err.Raise 513, "EnsureMaterial", "Thuoc tinh vat lieu khong khop sau khi khai bao: " & name
+  WriteStatus "MATERIAL|PROPERTIES_VERIFIED|" & name & "|epsilon=" & CStr(epsilon) & "|mu=" & CStr(mu) & "|sigma=" & CStr(sigma) & "|loss=" & CStr(loss)
+End Sub
+
+Function MaterialNumber(value)
+  MaterialNumber = Replace(CStr(value), ",", ".")
+End Function

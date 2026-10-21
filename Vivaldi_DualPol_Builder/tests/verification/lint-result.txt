@@ -1,2 +1,3 @@
 MISS_HIT Lint Summary: 9 file(s) analysed, everything seems fine
-Scope: four main files, two MATLAB helpers and three MATLAB test files; MATLAB runtime not available.
+Scope: 4 application modules, 2 MATLAB helpers, 3 MATLAB test files; static lint only.
+MATLAB GUI, Windows compiler and HFSS CAD/solver remain PENDING.

@@ -11,8 +11,8 @@
   },
   "generatedScripts": [
     {
-      "file": "/tmp/vivaldi-library-path-verified/scripts/oct-cChjJq/build.vbs",
-      "bytes": 799560,
+      "file": "/tmp/vivaldi-material-release/scripts/oct-VDpOrS/build.vbs",
+      "bytes": 820584,
       "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -23,8 +23,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-library-path-verified/scripts/oct-k3A1T7/build.vbs",
-      "bytes": 828290,
+      "file": "/tmp/vivaldi-material-release/scripts/oct-JjpBTe/build.vbs",
+      "bytes": 848321,
       "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -35,8 +35,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-library-path-verified/scripts/oct-TnTvo8/build.vbs",
-      "bytes": 47157,
+      "file": "/tmp/vivaldi-material-release/scripts/oct-Qk51yN/build.vbs",
+      "bytes": 50831,
       "maxPhysicalLine": 852,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -47,9 +47,9 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-library-path-verified/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-wqETfo/build.vbs",
-      "bytes": 808020,
-      "maxPhysicalLine": 886,
+      "file": "/tmp/vivaldi-material-release/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-aAgvjq/build.vbs",
+      "bytes": 829570,
+      "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
         "strings/parentheses",
@@ -59,8 +59,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-library-path-verified/encoding.vbs",
-      "bytes": 26702,
+      "file": "/tmp/vivaldi-material-release/encoding.vbs",
+      "bytes": 30777,
       "maxPhysicalLine": 755,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -71,8 +71,8 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-library-path-verified/simulate.vbs",
-      "bytes": 142637,
+      "file": "/tmp/vivaldi-material-release/simulate.vbs",
+      "bytes": 146198,
       "maxPhysicalLine": 898,
       "checks": [
         "ASCII/no BOM/NUL",
@@ -83,9 +83,33 @@
       ]
     },
     {
-      "file": "/tmp/vivaldi-library-path-verified/collision/scripts/oct-LkZ9AA/build.vbs",
-      "bytes": 47257,
+      "file": "/tmp/vivaldi-material-release/collision/scripts/oct-WZPOEq/build.vbs",
+      "bytes": 51374,
       "maxPhysicalLine": 852,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/pec/scripts/oct-pkMGju/build.vbs",
+      "bytes": 818310,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-final/scripts/oct-55scpW/build.vbs",
+      "bytes": 819988,
+      "maxPhysicalLine": 882,
       "checks": [
         "ASCII/no BOM/NUL",
         "strings/parentheses",

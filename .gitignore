@@ -38,3 +38,7 @@ Thumbs.db
 /Vivaldi_DualPol_Builder.zip
 /Vivaldi_DualPol_Builder_ZIP_INTEGRITY.json
 *.aedt.reserve/
+
+# User material preferences belong to prefdir, not source control
+custom_materials.mat
+custom_materials.mat.bak

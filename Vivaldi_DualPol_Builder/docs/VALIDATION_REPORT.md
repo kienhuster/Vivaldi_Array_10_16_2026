@@ -42,8 +42,27 @@ Fixture chỉ dùng FakeEditor/FakeProject, không tạo hay validate CAD HFSS. 
 
 ## Kiểm tra đường dẫn thư viện
 
-Kiểm thử dùng bản sao riêng trong thư mục tạm: kiểm tra đủ 26 helper; gọi khởi tạo ngoài Current Folder và lặp lại không đổi path; poll không thêm đường dẫn; phát hiện hfssRectangle bị shadow trên path/Current Folder; phát hiện thiếu từng thư mục API/custom và các file API/helper/VBS. Lỗi phải có tên và đường dẫn mong đợi/đang nhận. Không sửa/xóa file thư viện thật trong quá trình kiểm thử.
+Kiểm thử dùng bản sao riêng trong thư mục tạm: kiểm tra đủ 26 helper; gọi khởi tạo ngoài Current Folder và lặp lại không đổi path; poll không thêm đường dẫn; tự sửa ưu tiên hfssRectangle khi bị shadow trên path, dừng khi bị shadow trong Current Folder; phát hiện thiếu từng thư mục API/custom và các file API/helper/VBS. Lỗi phải có tên và đường dẫn mong đợi/đang nhận. Không sửa/xóa file thư viện thật trong quá trình kiểm thử.
 
 Audit Python đối chiếu toàn bộ function handle/lời gọi upstream với bảng manifest trong Builder, vị trí file thật, bảng README và cả lời gọi phụ thuộc bên trong helper. GUI có test dừng trước uifigure khi thư viện xung đột; test GUI MATLAB này chưa chạy ở Cloud. CAD/API/solver HFSS 2021 R2 vẫn PENDING.
 
 Có thể chạy riêng các kiểm tra đường dẫn bằng `runBuildOnlyTests(tempname, 'library')`; fixture chỉ sao chép mã thư viện và bốn module, không sao chép output/reference hoặc dữ liệu mô phỏng của người dùng.
+
+
+## Bản vật liệu và addpath trực tiếp
+
+`runBuildOnlyTests` gồm 28 nhóm kiểm tra dữ liệu, công thức, đường dẫn và sinh script. Sáu nhóm vật liệu kiểm tra 11 mặc định, PEC không conductivity giả, tìm kiếm không phân biệt hoa/thường, số không hợp lệ, từ chối điện môi cho thân, lưu/nạp/backup MAT, trùng tên và bảo toàn cấu hình hỏng. Có thể chạy riêng bằng `runBuildOnlyTests(tempname,'materials')`.
+
+Script hồi quy bao gồm Aluminum, Copper, PEC và custom metal có conductivity số lẻ; kiểm tra snapshot/job.json, gán tất cả phần thân, coax Copper, MaterialValue/SolveInside, lệnh readback. Các assertion này chỉ xác minh script được sinh, không xác nhận HFSS đã thực thi. Fixture VBS bổ sung đối chiếu thuộc tính đủ/thiếu mặc định/mismatch/không hợp lệ; chưa chạy vì không có cscript Windows.
+
+GUI test bổ sung cửa sổ thư viện, tìm kiếm, OK/Cancel, thêm/lưu custom metal và mở lại. GUI MATLAB thật còn PENDING.
+
+Để chạy riêng các ca vật liệu CAD trên Windows (không chạy solver):
+
+```matlab
+addpath('tests');
+runHFSSBuildIntegration('D:\Program Files\AnsysEM\AnsysEM21.2\Win64\ansysedt.exe', ...
+    fullfile(tempdir,'Vivaldi_VatLieu'), true, false, true);
+```
+
+Ca Aluminum/Copper/PEC/custom metal trong báo cáo tích hợp đều PENDING cho tới khi thực thi thành công trên HFSS 2021 R2. Các CHECK_01..18, compiler Windows, ValidateDesign, SaveAs, solver và thuộc tính HFSS đọc lại đều chưa được kiểm chứng thực tế trong Cloud. Không coi lint, fixture hoặc script generation là kết quả CAD.

@@ -1,7 +1,7 @@
 Option Explicit
 ' Windows-only protocol fixtures. No HFSS CAD is created or validated here.
 Dim fs, vStatusPath, vStage, vStageName, vCommand, vSaveDebug, vDebugPath
-Dim oEditor, oProject, oDesign, oReport, oBoundary, folder, stream, runtime, values, number, text
+Dim oEditor, oProject, oDesign, oReport, oBoundary, oMaterials, folder, stream, runtime, values, number, text
 Set fs = CreateObject("Scripting.FileSystemObject")
 If WScript.Arguments.Count <> 1 Then
   WScript.Echo "Usage: cscript //nologo testRuntimeQueries.vbs <hfssVivaldiChecks.vbs>"
@@ -79,7 +79,19 @@ Assert InStr(text, "QUERY|CHECK_02|oEditor.GetObjectsInGroup(""Lines"")|ERROR|45
 Assert InStr(text, "ERROR|CHECK_02|") > 0, "Stage and operation error log"
 Assert InStr(text, "DEBUG|SAVED_INCOMPLETE|") > 0, "Debug must be labelled incomplete"
 Assert InStr(text, "STATE|FAILED") > 0 And InStr(text, "VERIFIED|1") = 0, "No completed antenna from fixtures"
-WScript.Echo "PASS: runtime query/protocol fixtures only; HFSS CAD remains PENDING. Log: " & vStatusPath
+' Material defaults are valid only within a successfully read named definition.
+values = Array("NAME:aluminum","permeability:=","1.000021","conductivity:=","38000000")
+Assert DefinitionMatchesData(values,1,1.000021,38000000,0), "Omitted scalar defaults in source aluminum"
+Assert Not DefinitionMatchesData(values,2,1.000021,38000000,0), "Missing epsilon cannot match nondefault"
+Assert Not DefinitionMatchesData(values,1,1,38000000,0), "Explicit mismatched mu"
+Assert Not DefinitionMatchesData(Empty,1,1,0,0), "Failed/empty GetData is not a definition"
+Assert Not DefinitionMatchesData(Array(),1,1,0,0), "Empty array is not a definition"
+Assert Not DefinitionMatchesData(Array("invalid"),1,1,0,0), "Named definition required"
+values = Array("NAME:bad","conductivity:=","not-a-number")
+Assert Not DefinitionMatchesData(values,1,1,0,0), "Explicit invalid property never defaults"
+values = Array("NAME:custom","permittivity:=","2","permeability:=","1.01","conductivity:=","41234567.89","dielectric_loss_tangent:=","0.003")
+Assert DefinitionMatchesData(values,2,1.01,41234567.89,0.003), "Readback all custom scalar properties"
+WScript.Echo "PASS: runtime query/material protocol fixtures only; HFSS CAD remains PENDING. Log: " & vStatusPath
 
 Sub Assert(condition, message)
   If Not condition Then

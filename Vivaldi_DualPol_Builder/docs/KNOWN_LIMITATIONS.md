@@ -11,3 +11,5 @@ Preview dùng polyshape lấy mẫu và extrusion, không phải CAD HFSS. Chư�
 GUI chỉ theo dõi job hiện tại; đóng GUI không kill HFSS. Script/status còn trong thư mục xuất để chẩn đoán. Không có phục hồi session, mở lại tham số, quản lý unsaved changes hoặc cập nhật anten cũ. Muốn đổi kích thước thì dựng file mới.
 
 Thư mục .aedt.reserve được giữ để tên đã cấp không bị dùng lại, kể cả khi dựng lỗi. Có thể dọn thủ công sau khi chắc chắn không còn job chạy; không cần dọn để tạo anten tiếp theo.
+
+Cửa sổ thư viện vật liệu, MAT trên prefdir Windows, GetManager(Material).GetData, AddMaterial, AssignMaterial/MaterialValue và readback thuộc tính cũng chưa được chạy thực tế trên MATLAB/HFSS 2021 R2. Các ca vật liệu trong test tích hợp giữ PENDING. Hai ảnh mẫu vật liệu không có trong tệp truy cập được, nên chưa xác nhận khớp ảnh.

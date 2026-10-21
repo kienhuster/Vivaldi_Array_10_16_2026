@@ -1,6 +1,6 @@
 # Cơ chế dựng từ đầu bằng hfss-api
 
-Bốn file chính: `Vivaldi_GUI.m` (callback lồng, sáu nút), `Vivaldi_Calculation.m` (19 biến và công thức/kiểm tra), `Vivaldi_HFSS_Builder.m` (trình tự CAD và phép đo), `Vivaldi_HFSS_Simulation.m` (port, solver, report và CSV).
+Bốn file chính: `Vivaldi_GUI.m` (callback lồng, bảy nút), `Vivaldi_Calculation.m` (19 biến và công thức/kiểm tra), `Vivaldi_HFSS_Builder.m` (trình tự CAD và phép đo), `Vivaldi_HFSS_Simulation.m` (port, solver, report và CSV).
 
 `custom_helpers/hfssVivaldiScript.m` là struct callback ghi tệp, không phải class/session COM. Nó gọi helper gốc với fid thật, thay duy nhất các trường số/biểu thức mà helper cũ không biểu diễn đủ, thêm guard lỗi và xuất script ASCII không BOM. Không viết lại Rectangle/Box/Cylinder/Boolean. `hfssVivaldiChecks.vbs` chứa các phép đo CAD và dữ liệu kết quả; `vivaldiPreview3D.m` là preview lấy mẫu. Không còn các lớp VivaldiHFSS, ScriptWriter, COM Adapter hay rollback.
 
@@ -14,4 +14,6 @@ Thư viện upstream giữ nguyên 89 tệp và GPL; chỉ bản vá hfssExecute
 
 ## Khởi tạo và kiểm tra thư viện
 
-Hàm cục bộ initializeLibrary trong Vivaldi_HFSS_Builder khai báo từng thư mục, ánh xạ 26 helper upstream và kiểm tra which trước/sau khi thêm đường dẫn còn thiếu. GUI gọi action initialize trước uifigure. Builder không khởi tạo trong poll; Simulation kiểm tra trước create/apply/run/reports. File .vbs được kiểm tra isfile và luôn đọc bằng đường dẫn đầy đủ. Bảng từng helper/file nằm trong README_TIENG_VIET.md. Không gọi hfssIncludePaths hoặc genpath trong ứng dụng.
+Hàm cục bộ initializeLibrary trong Vivaldi_HFSS_Builder khai báo từng thư mục, ánh xạ 26 helper upstream và kiểm tra thư mục/file, nạp addpath tường minh với -begin rồi kiểm tra which của từng helper. GUI gọi action initialize trước uifigure. Builder không khởi tạo trong poll; Simulation kiểm tra trước create/apply/run/reports. File .vbs được kiểm tra isfile và luôn đọc bằng đường dẫn đầy đủ. Bảng từng helper/file nằm trong README_TIENG_VIET.md. Không gọi hfssIncludePaths hoặc genpath trong ứng dụng.
+
+Lựa chọn vật liệu, lưu MAT, snapshot và đọc lại thuộc tính HFSS: xem MATERIAL_GUIDE.md. Không thêm file MATLAB hoặc COM adapter cho vật liệu.

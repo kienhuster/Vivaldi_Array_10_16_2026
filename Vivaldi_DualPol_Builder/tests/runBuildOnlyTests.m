@@ -2,16 +2,19 @@ function report = runBuildOnlyTests(folder, selection)
 % Mục đích: kiểm tra công thức, script thật và guard; không giả lập CAD thành PASS.
 if nargin < 1, folder = tempname; end
 if nargin < 2, selection = 'all'; end
-assert(ismember(selection, {'all', 'library'}), 'Vivaldi:Test', 'Nhóm kiểm tra không hợp lệ.');
+assert(ismember(selection, {'all', 'library', 'materials'}), 'Vivaldi:Test', 'Nhóm kiểm tra không hợp lệ.');
 if ~isfolder(folder), mkdir(folder); end
 root = fileparts(fileparts(mfilename('fullpath'))); addpath(root);
-checks = checkLibraryPaths(root, folder); scripts = {};
-if strcmp(selection, 'library')
+checks = {}; scripts = {};
+if ~strcmp(selection,'materials'), checks=checkLibraryPaths(root,folder); end
+if ~strcmp(selection,'library'), checks=[checks checkMaterialData(folder)]; end
+if ~strcmp(selection,'all')
     report = struct('status', 'PASS', 'runtime', version, 'count', numel(checks), 'checks', {checks}, ...
-        'scope', 'Kiểm tra path/file/which và fixture; không chạy GUI hoặc HFSS.', 'MATLAB_GUI', 'PENDING', 'HFSS_CAD', 'PENDING');
-    fid = fopen(fullfile(folder, 'library-path-tests.json'), 'w', 'n', 'UTF-8');
+        'scope', ['Kiểm tra dữ liệu/fixture nhóm ' selection '; không chạy GUI hoặc HFSS.'], 'MATLAB_GUI', 'PENDING', 'HFSS_CAD', 'PENDING');
+    name=[selection '-tests.json']; if strcmp(selection,'library'), name='library-path-tests.json'; end
+    fid = fopen(fullfile(folder,name), 'w', 'n', 'UTF-8');
     fprintf(fid, '%s\n', jsonencode(report)); fclose(fid);
-    fprintf('PASS: %d nhóm kiểm tra đường dẫn thư viện.\n', numel(checks)); return
+    fprintf('PASS: %d nhóm kiểm tra %s.\n', numel(checks),selection); return
 end
 [p, meta] = Vivaldi_Calculation('defaults');
 [ok, errors, ~, g] = Vivaldi_Calculation('validate', p);
@@ -35,7 +38,9 @@ bad = p; bad.cavity_L = 999; assert(~Vivaldi_Calculation('validate', bad));
 checks{end + 1} = 'Từ chối bán kính sai, surface suy biến và cavity vượt tấm';
 
 first = Vivaldi_HFSS_Builder('generate', p, folder);
-second = Vivaldi_HFSS_Builder('generate', q, folder);
+db=Vivaldi_Calculation('material_defaults');
+copper=db(strcmp({db.name},'Copper'));
+second = Vivaldi_HFSS_Builder('generate', q, folder, Vivaldi_HFSS_Simulation('defaults'),'full',false,copper);
 assert(~strcmp(first.projectPath, second.projectPath));
 assert(~isfile(first.projectPath) && ~isfile(second.projectPath));
 assert(isfolder(first.reservation) && isfolder(second.reservation));
@@ -85,7 +90,8 @@ scripts{end + 1} = probe.scriptPath;
 checks{end + 1} = 'Script project trống và Rectangle thử riêng, chưa coi là anten';
 
 unicodeFolder = fullfile(folder, 'Đồ án Vivaldi');
-unicodeJob = Vivaldi_HFSS_Builder('generate', p, unicodeFolder);
+custom=copper;custom.name='Custom_Metal_Test';custom.conductivity=41234567.89;custom.permeability=1.01;
+unicodeJob = Vivaldi_HFSS_Builder('generate', p, unicodeFolder,Vivaldi_HFSS_Simulation('defaults'),'full',false,custom);
 scripts{end + 1} = unicodeJob.scriptPath;
 for k = 1:numel(scripts)
     fid = fopen(scripts{k}, 'rb'); bytes = fread(fid, Inf, '*uint8'); fclose(fid);
@@ -159,6 +165,26 @@ for step = 1:18
 end
 checks{end + 1} = 'Hồi quy 450: query Sheets riêng, không Dictionary, đủ checkpoint và log lệnh/lỗi';
 
+% Snapshot từng vật liệu phải được đưa vào CAD, không chỉ đổi nhãn GUI.
+assert(strcmp(first.bodyMaterial.name,'Aluminum'));
+ct=fileread(second.scriptPath);
+for part={'Vivaldi_1','Vivaldi_2','Box1','De'}
+    assert(~isempty(strfind(ct,['MaterialMatches("' part{1} '","copper",False)'])));
+end
+assert(~isempty(strfind(ct,'"MaterialValue:="')));
+assert(~isempty(strfind(ct,'MaterialDefinitionMatches(')));
+ut=fileread(unicodeJob.scriptPath);
+assert(~isempty(strfind(ut,'vBodyMaterial = "custom_metal_test"')));
+assert(~isempty(strfind(ut,sprintf('%.17g',custom.conductivity))));
+metadata=jsondecode(fileread(fullfile(unicodeJob.jobFolder,'job.json')));
+assert(isequal(metadata.bodyMaterial,custom));
+pec=db(strcmp({db.name},'PEC'));
+ideal=Vivaldi_HFSS_Builder('generate',p,fullfile(folder,'pec'),cfg,'full',false,pec);
+scripts{end+1}=ideal.scriptPath; idealText=fileread(ideal.scriptPath);
+assert(~isempty(strfind(idealText,'vBodyMaterial = "pec"')) && isempty(strfind(idealText,'EnsureMaterial "pec"')));
+expectError(@()Vivaldi_HFSS_Builder('generate',p,folder,cfg,'full',false,db(1)),'Vivaldi:MaterialBody');
+checks{end+1}='Aluminum/Copper/PEC/custom: snapshot, thuộc tính và gán mọi phần thân; điện môi bị chặn';
+
 report = struct('status', 'PASS', 'runtime', version, 'count', numel(checks), ...
     'checks', {checks}, 'scripts', {scripts}, ...
     'scope', 'Công thức, helper sinh script, encoder và protocol fixture; không chạy CAD/HFSS.', ...
@@ -210,20 +236,19 @@ fid = fopen(shadowFile, 'w');
 fprintf(fid, 'function hfssRectangle(varargin)\nerror(''Vivaldi:ShadowExecuted'',''Shadow must never execute'');\nend\n'); fclose(fid);
 clear hfssRectangle;
 addpath(shadow, '-begin'); beforeFailure = path;
-expectLibraryError(@()Vivaldi_HFSS_Builder('initialize'), 'Vivaldi:LibraryConflict', ...
-    {'hfssRectangle', fullfile(library.paths.modeler3d, 'hfssRectangle.m'), shadowFile});
-assert(strcmp(path, beforeFailure));
-rmpath(shadow); clear hfssRectangle;
+Vivaldi_HFSS_Builder('initialize');
+assert(strcmp(which('hfssRectangle'),fullfile(library.paths.modeler3d,'hfssRectangle.m')));
+clear hfssRectangle;
 cd(shadow); beforeFailure = path;
 expectLibraryError(@()Vivaldi_HFSS_Builder('initialize'), 'Vivaldi:LibraryConflict', ...
     {'hfssRectangle', fullfile(library.paths.modeler3d, 'hfssRectangle.m'), shadowFile});
 assert(strcmp(path, beforeFailure)); cd(temporary); clear hfssRectangle;
-checks{end + 1} = 'Phát hiện shadow trên path và Current Folder, báo tên/mong đợi/which';
+checks{end + 1} = 'Nạp dự án trước which: tự sửa shadow trên path, báo xung đột Current Folder';
 
 fixture = fullfile(temporary, 'fixture'); mkdir(fixture);
 % Chỉ sao chép mã cần kiểm tra, không copy output, references hoặc dữ liệu HFSS của người dùng.
 mkdir(fullfile(fixture, 'third_party'));
-copyfile(library.paths.apiRoot, fullfile(fixture, 'third_party', 'hfss-api'));
+copyfile(library.paths.library, fullfile(fixture, 'third_party', 'hfss-api'));
 copyfile(library.paths.customHelpers, fullfile(fixture, 'custom_helpers'));
 for name = {'Vivaldi_HFSS_Builder.m', 'Vivaldi_GUI.m', 'Vivaldi_Calculation.m', 'Vivaldi_HFSS_Simulation.m'}
     copyfile(fullfile(root, name{1}), fullfile(fixture, name{1}));
@@ -233,7 +258,7 @@ source = strrep(source, 'function out = Vivaldi_HFSS_Builder(action, varargin)',
 fid = fopen(fullfile(fixture, 'FixtureHFSSBuilder.m'), 'w', 'n', 'UTF-8'); fprintf(fid, '%s', source); fclose(fid);
 addpath(fixture, '-end');
 % Từng thư mục bắt buộc đều bị phát hiện trước bất kỳ sửa đổi path nào.
-for name = {'apiRoot', 'general', 'modeler3d', 'boundary', 'analysis', 'radiation', 'reporter', 'mesh', 'fieldsCalculator', 'customHelpers'}
+for name = {'library', 'general', 'modeler3d', 'boundary', 'analysis', 'radiation', 'reporter', 'mesh', 'fieldsCalculator', 'customHelpers'}
     relative = library.paths.(name{1})(numel(root) + 2:end);
     expected = fullfile(fixture, relative); hidden = [expected '_hidden'];
     movefile(expected, hidden); beforeFailure = path;
@@ -275,4 +300,55 @@ function restoreLibraryTestState(oldPath, oldFolder, temporary)
 cd(oldFolder); path(oldPath);
 clear hfssRectangle FixtureHFSSBuilder;
 if isfolder(temporary), rmdir(temporary, 's'); end
+end
+
+function checks = checkMaterialData(folder)
+% Mục đích: kiểm tra dữ liệu/lưu MAT thật; không dùng dữ liệu RF giả hoặc HFSS giả.
+checks={}; database=Vivaldi_Calculation('material_defaults');
+assert(numel(database)==11);
+aluminum=database(strcmp({database.name},'Aluminum')); copper=database(strcmp({database.name},'Copper')); pec=database(strcmp({database.name},'PEC'));
+assert(aluminum.conductivity==38000000 && aluminum.permeability==1.000021);
+assert(copper.conductivity==58000000 && copper.permeability==.999991);
+assert(isempty(pec.conductivity)); Vivaldi_Calculation('material_body',pec);
+for k=1:numel(database),Vivaldi_Calculation('material_validate',database(k));end
+checks{end+1}='11 vật liệu, Aluminum/Copper đúng nguồn và PEC không sigma giả';
+assert(numel(Vivaldi_Calculation('material_filter',database,'rOgErS'))==2);
+assert(numel(Vivaldi_Calculation('material_filter',database,''))==11);
+assert(isempty(Vivaldi_Calculation('material_filter',database,'unknown-material')));
+checks{end+1}='Tìm kiếm không phân biệt hoa/thường và không làm mất danh sách';
+for field={'conductivity','permeability','permittivity','lossTangent'}
+    bad=aluminum;bad.(field{1})=NaN;expectError(@()Vivaldi_Calculation('material_validate',bad),'Vivaldi:Material');
+end
+bad=aluminum;bad.conductivity=0;expectError(@()Vivaldi_Calculation('material_validate',bad),'Vivaldi:Material');
+bad=aluminum;bad.name='';expectError(@()Vivaldi_Calculation('material_validate',bad),'Vivaldi:Material');
+bad=database(1);bad.lossTangent=-.1;expectError(@()Vivaldi_Calculation('material_validate',bad),'Vivaldi:Material');
+expectError(@()Vivaldi_Calculation('material_body',database(1)),'Vivaldi:MaterialBody');
+checks{end+1}='Chặn số không hữu hạn, dữ liệu sai loại và điện môi áp lên thân kim loại';
+file=fullfile(folder,'preferences','custom_materials.mat');
+metal=copper;metal.name='My_Custom_Metal';metal.conductivity=34567890.123;metal.permeability=1.03;
+loaded=Vivaldi_Calculation('material_save',file,metal);
+assert(numel(loaded)==12 && isfile(file));
+[loaded,message]=Vivaldi_Calculation('material_load',file);assert(isempty(message));
+assert(isequal(loaded(end),metal));
+dielectric=database(1);dielectric.name='My_Custom_Dielectric';dielectric.permittivity=4.71;dielectric.lossTangent=.00321;
+Vivaldi_Calculation('material_save',file,dielectric);
+[loaded,message]=Vivaldi_Calculation('material_load',file);assert(isempty(message) && numel(loaded)==13 && isequal(loaded(end),dielectric));
+assert(isfile([file '.bak']));
+checks{end+1}='Lưu/nạp lại custom kim loại và điện môi, có backup, giữ độ chính xác';
+before=fileBytes(file);expectError(@()Vivaldi_Calculation('material_save',file,copper),'Vivaldi:MaterialDuplicate');
+metal.name=lower(metal.name);expectError(@()Vivaldi_Calculation('material_save',file,metal),'Vivaldi:MaterialDuplicate');
+assert(isequal(before,fileBytes(file)));
+checks{end+1}='Không ghi đè tên mặc định/custom trùng nhau kể cả khác hoa/thường';
+corrupt=fullfile(folder,'preferences','bad.mat');fid=fopen(corrupt,'wb');fwrite(fid,uint8('CORRUPT_FILE_MUST_STAY'));fclose(fid);
+before=fileBytes(corrupt);[loaded,message]=Vivaldi_Calculation('material_load',corrupt);
+assert(numel(loaded)==11 && ~isempty(message));
+expectError(@()Vivaldi_Calculation('material_save',corrupt,metal),'Vivaldi:MaterialConfig');
+assert(isequal(before,fileBytes(corrupt)));
+checks{end+1}='Cấu hình lỗi được báo và giữ nguyên byte, không âm thầm xóa hoặc ghi đè';
+end
+
+function bytes = fileBytes(file)
+% Mục đích: đối chiếu file cấu hình binary không phụ thuộc encoding MATLAB/Windows.
+fid=fopen(file,'rb');cleanup=onCleanup(@()fclose(fid)); %#ok<NASGU>
+bytes=fread(fid,Inf,'*uint8');
 end

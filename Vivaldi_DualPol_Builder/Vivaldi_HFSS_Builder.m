@@ -17,6 +17,10 @@ switch action
         Vivaldi_HFSS_Simulation('validate', cfg);
         mode = 'full'; if numel(varargin) >= 4, mode = varargin{4}; end
         assert(ismember(mode, {'full', 'rectangle'}), 'Vivaldi:BuildMode', 'Chế độ dựng không hợp lệ.');
+        database = Vivaldi_Calculation('material_defaults');
+        body = database(strcmp({database.name},'Aluminum'));
+        if numel(varargin)>=6, body = varargin{6}; end
+        body = Vivaldi_Calculation('material_body',body);
         folder = canonical(folder);
         reference = canonical(fullfile(root, 'reference'));
         assert(~strcmpi(folder, reference) && ~startsWith(lower(folder), [lower(reference) filesep]), ...
@@ -24,7 +28,7 @@ switch action
         if ~isfolder(folder), [yes, message] = mkdir(folder); assert(yes, '%s', message); end
         [path, reservation] = reserveNewPath(folder);
         out = newJob(path, folder, p, cfg, 'build');
-        out.reservation = reservation; out.mode = mode;
+        out.reservation = reservation; out.mode = mode; out.bodyMaterial = body;
         saveDebug = false; if numel(varargin) >= 5, saveDebug = varargin{5}; end
         out.debugEnabled = saveDebug;
         out.debugPath = fullfile(out.jobFolder, 'CAD_DEBUG_INCOMPLETE.aedt');
@@ -32,6 +36,7 @@ switch action
         cleanup = onCleanup(w.abort); %#ok<NASGU>
         %% 1. Khởi tạo dự án HFSS mới bằng helper thư viện, không mở AEDT cũ
         bootstrap(w);
+        w.line(['vBodyMaterial = ' w.q(lower(body.name))]);
         w.lib(@hfssInsertDesign, {out.designName, 'driven modal'});
         w.pass('PROJECT_TRONG', 'PASS', 'Đã tạo project trống và Driven Modal design');
         if strcmp(mode, 'rectangle')
@@ -42,7 +47,7 @@ switch action
             w.require('oDesign.ValidateDesign() = 1', 'Validate Rectangle thử thất bại');
             w.pass('RECTANGLE_THU', 'PASS', 'Đã đo Rectangle thử, không phải anten');
         else
-            buildGeometry(w, p, cfg);
+            buildGeometry(w, p, cfg, body);
         end
         %% 14. Chỉ lưu sau khi đã qua kiểm tra, kiểm tra đích lần nữa ngay trước Save
         w.stage('LUU_AEDT');
@@ -52,7 +57,7 @@ switch action
         w.require(['fs.GetFile(' w.q(path) ').Size > 0'], 'File AEDT rỗng');
         w.pass('LUU_AEDT', 'PASS', 'Đã lưu file AEDT mới sau kiểm tra');
         terminal(w);
-        w.finish();
+        w.finish(); writeJobMetadata(out);
     case 'simulate'
         built = varargin{1};
         assert(strcmp(built.action, 'build') && strcmp(built.mode, 'full') && ...
@@ -61,15 +66,18 @@ switch action
         cfg = built.simulation; if numel(varargin) >= 2, cfg = varargin{2}; end
         Vivaldi_HFSS_Simulation('validate', cfg);
         out = newJob(built.projectPath, fileparts(built.projectPath), built.params, cfg, 'simulate');
+        out.bodyMaterial = built.bodyMaterial;
         w = hfssVivaldiScript(out.scriptPath, out.statusPath, out.id);
+        w.line(['vBodyMaterial = ' w.q(lower(built.bodyMaterial.name))]);
         cleanup = onCleanup(w.abort); %#ok<NASGU>
         % Chỉ mô phỏng mới mở file đã tạo; không đưa mô hình cũ vào luồng build.
         attachGenerated(w, built.projectPath, built.designName);
+        verifyMaterialSnapshot(w,built.bodyMaterial);
         VivaldiValidation('full', w, built.params, true);
         Vivaldi_HFSS_Simulation('run', w, cfg);
         Vivaldi_HFSS_Simulation('reports', w, cfg, out.jobFolder, out.id);
         w.call('oProject.Save', 'Lưu kết quả mô phỏng của file vừa tạo');
-        terminal(w); w.finish();
+        terminal(w); w.finish(); writeJobMetadata(out);
     case 'launch'
         out = varargin{1}; exe = varargin{2};
         assert(ispc && isfile(exe), 'Vivaldi:HFSS', 'Cần Windows và đường dẫn ansysedt.exe hợp lệ.');
@@ -230,7 +238,7 @@ for k = 1:size(g.expressions, 1)
 end
 end
 
-function buildGeometry(w, p, cfg)
+function buildGeometry(w, p, cfg, body)
     % Mục đích: dựng đúng một phần tử Vivaldi dual-pol từ design trống bằng hfss-api.
     % Giữ biểu thức, CS lồng nhau, cutter trước hollowing và checkpoint đo CAD thật.
     [ok, errors] = Vivaldi_Calculation('validate', p);
@@ -238,7 +246,7 @@ function buildGeometry(w, p, cfg)
     g = Vivaldi_Calculation('geometry', p);
     %% 1. Khai báo biến và tính chất điện từ đúng mô hình nguồn
     hfssVivaldiExtensions(w, 'variables', p);
-    materials(w);
+    materials(w, body);
     w.call('oEditor.SetModelUnits Array("NAME:Units Parameter","Units:=","mm","Rescale:=",False)', 'Đặt đơn vị mô hình mm');
     %% 2. Tạo các hệ tọa độ và giữ gốc local theo parent
     w.stage('CHECK_01');
@@ -286,7 +294,7 @@ function buildGeometry(w, p, cfg)
     w.lib(@hfssSetWCS, {'patch_td'});
     hfssVivaldiExtensions(w, 'rectangle', 'Vivaldi_1', {'0mm', '0mm'}, {'-L_patch', '-aperture_w'});
     w.lib(@hfssSubtract, {{'Vivaldi_1'}, {'EquationSurface1'}, 'false'});
-    hfssVivaldiExtensions(w, 'material', 'Vivaldi_1', 'aluminum');
+    hfssVivaldiExtensions(w, 'material', 'Vivaldi_1', lower(body.name));
     VivaldiValidation('flare', w, p, 'Vivaldi_1', 1, false);
     VivaldiValidation('cavity', w, p, false);
     w.pass('CHECK_08', 'PASS', 'Đã đo flare rỗng, hai mép kim loại và khe/cavity trên sheet');
@@ -300,14 +308,17 @@ function buildGeometry(w, p, cfg)
     w.lib(@hfssSetWCS, {'RelativeCS1'});
     hfssVivaldiExtensions(w, 'clone', 'Vivaldi_1', 'Vivaldi_2', true);
     hfssVivaldiExtensions(w, 'moveSecond', 'Vivaldi_2');
+    w.require(['MaterialMatches("Vivaldi_2",' w.q(lower(body.name)) ',False)'], 'Vật liệu phân cực hai không đúng snapshot');
     VivaldiValidation('flare', w, p, 'Vivaldi_2', 2, true);
     w.pass('CHECK_10', 'PASS', 'Phân cực hai còn vùng loe và chiều dày đúng');
     %% 9. Khối nối và đế, sau đó Unite thân aluminum
     w.stage('CHECK_11');
     w.lib(@hfssSetWCS, {'RelativeCS1'});
-    hfssVivaldiExtensions(w, 'box', 'Box1', {'0mm', '0mm', '0mm'}, {'thickness', 'thickness', '-L_patch'}, 'aluminum');
+    hfssVivaldiExtensions(w, 'box', 'Box1', {'0mm', '0mm', '0mm'}, {'thickness', 'thickness', '-L_patch'}, lower(body.name));
+    hfssVivaldiExtensions(w, 'material', 'Box1', lower(body.name));
     w.lib(@hfssSetWCS, {'Global'});
-    hfssVivaldiExtensions(w, 'box', 'De', {'(de_L+thickness)/2', '-(de_W-aperture_w)/2', 'z_feed-h3_slot_feed-slot_feed_w'}, {'-de_L', 'de_W', '-h_de'}, 'aluminum');
+    hfssVivaldiExtensions(w, 'box', 'De', {'(de_L+thickness)/2', '-(de_W-aperture_w)/2', 'z_feed-h3_slot_feed-slot_feed_w'}, {'-de_L', 'de_W', '-h_de'}, lower(body.name));
+    hfssVivaldiExtensions(w, 'material', 'De', lower(body.name));
     w.pass('CHECK_11', 'PENDING', 'Khối nối và đế đã dựng');
     w.stage('CHECK_12');
     w.lib(@hfssUnite, {{'Vivaldi_1', 'Vivaldi_2', 'Box1', 'De'}});
@@ -347,25 +358,51 @@ function buildGeometry(w, p, cfg)
     w.lib(@hfssSetWCS, {'Global'});
     VivaldiValidation('full', w, p, false);
     w.pass('CHECK_15', 'PASS', 'Đã đo thể tích coax, cổng và khoét sáu cutter khỏi thân');
+    verifyMaterialSnapshot(w,body);
     %% 11–12. Gán hai Lumped Ports, radiation, setup và sweep Discrete
     Vivaldi_HFSS_Simulation('create', w, p, cfg);
     %% 13. Kiểm tra đầy đủ trước khi lưu; không tự chạy solver
     VivaldiValidation('full', w, p, true);
 end
 
-function materials(w)
-    % Helper thêm vật liệu gốc không có permeability; cần giữ đúng giá trị điện từ nguồn.
-    w.call('Set oMaterials = oProject.GetDefinitionManager()', 'Đọc danh sách vật liệu');
-    for item = {{'aluminum', '1.000021', '38000000'}, {'copper', '0.999991', '58000000'}, {'vacuum', '1', '0'}}
-        m = item{1};
-        a = {['NAME:' m{1}], 'CoordinateSystemType:=', 'Cartesian', 'BulkOrSurfaceType:=', 1, ...
-             {'NAME:PhysicsTypes', 'set:=', {'Electromagnetic'}}, 'permittivity:=', '1', 'permeability:=', m{2}, 'conductivity:=', m{3}};
-        w.line(['If HasName(oMaterials.GetProjectMaterialNames(),' w.q(m{1}) ') Then']);
-        w.call(['oMaterials.EditMaterial ' w.q(m{1}) ', ' w.literal(a)], ['Đặt vật liệu ' m{1}]);
-        w.line('Else');
-        w.call(['oMaterials.AddMaterial ' w.literal(a)], ['Thêm vật liệu ' m{1}]);
-        w.line('End If');
+function materials(w, body)
+% Mục đích: dùng định nghĩa đã xác minh, tạo custom khi cần; không sửa thư viện toàn cục.
+w.call('Set oMaterials = oProject.GetDefinitionManager()', 'Đọc DefinitionManager');
+all = Vivaldi_Calculation('material_defaults');
+required = [body, all(strcmp({all.name},'Copper')), all(strcmp({all.name},'Vacuum'))];
+seen = {};
+for k = 1:numel(required)
+    item = required(k); name = lower(item.name);
+    if any(strcmpi(seen,name)), continue; end
+    seen{end+1} = name; %#ok<AGROW>
+    if strcmp(item.kind,'pec')
+        w.line('WriteStatus "MATERIAL|PEC_BUILTIN|pec|Khong khai bao conductivity huu han"');
+    else
+        w.call(['EnsureMaterial ' w.q(name) ', ' w.literal(item.permittivity) ', ' w.literal(item.permeability) ', ' ...
+            w.literal(item.conductivity) ', ' w.literal(item.lossTangent)], ['Khai báo/đối chiếu vật liệu ' name]);
     end
+end
+end
+
+function verifyMaterialSnapshot(w, body)
+% Mục đích: xác minh định nghĩa điện từ trước lưu/solve, không chỉ kiểm tra tên.
+w.call('Set oMaterials = oProject.GetDefinitionManager()', 'Đọc vật liệu để kiểm tra snapshot');
+all=Vivaldi_Calculation('material_defaults'); required=[body,all(strcmp({all.name},'Copper')),all(strcmp({all.name},'Vacuum'))];
+for k=1:numel(required)
+    item=required(k);
+    if strcmp(item.kind,'pec'), continue; end
+    w.require(['MaterialDefinitionMatches(' w.q(lower(item.name)) ',' w.literal(item.permittivity) ',' ...
+        w.literal(item.permeability) ',' w.literal(item.conductivity) ',' w.literal(item.lossTangent) ')'], ...
+        ['Thuộc tính điện từ không đúng snapshot: ' item.name]);
+end
+end
+
+function writeJobMetadata(job)
+% Mục đích: lưu snapshot hình học/vật liệu/solver cạnh script, không chứng nhận CAD.
+fid = fopen(fullfile(job.jobFolder,'job.json'),'w','n','UTF-8');
+assert(fid>=0,'Vivaldi:Write','Không lưu được snapshot job.');
+cleanup = onCleanup(@()fclose(fid)); %#ok<NASGU>
+fprintf(fid,'%s\n',jsonencode(job));
 end
 
 function hfssVivaldiExtensions(w, action, varargin)
@@ -435,7 +472,12 @@ function hfssVivaldiExtensions(w, action, varargin)
             w.lib(@hfssMove, {{varargin{1}}, [0 1 0], 'mm'}, ...
                   {'TranslateVectorX', '0mm'; 'TranslateVectorY', 'thickness'; 'TranslateVectorZ', '0mm'});
         case 'material'
-            w.lib(@hfssAssignMaterial, {varargin{1}, varargin{2}, false}, {'SolveInside', false});
+            % AssignMaterial 2021 R2 nhận MaterialValue có tên vật liệu được quote.
+            text = w.capture(@hfssAssignMaterial, {varargin{1}, varargin{2}, false}, ...
+                {'MaterialName', ['"' varargin{2} '"']; 'SolveInside', false});
+            text = strrep(text,'"MaterialName:="','"MaterialValue:="');
+            w.call(text, ['Gán vật liệu ' varargin{2} ' cho ' varargin{1}]);
+            w.require(['MaterialMatches(' w.q(varargin{1}) ',' w.q(varargin{2}) ',False)'], 'Vật liệu hoặc SolveInside không đúng sau AssignMaterial');
         case 'variables'
             p = varargin{1};
             g = Vivaldi_Calculation('geometry', p);
@@ -550,7 +592,7 @@ function out = VivaldiValidation(action, varargin)
                 probe(w, g, 1, outer, center, true, 'Thiếu vỏ coax');
                 probe(w, g, 1, 'Vivaldi_1', center, false, 'Khoét coax khỏi thân nhôm chưa thành công');
             end
-            w.require('MaterialMatches("Vivaldi_1","aluminum",False)', 'Thân phải là aluminum, SolveInside=false');
+            w.require('MaterialMatches("Vivaldi_1",vBodyMaterial,False)', 'Vật liệu thân không đúng snapshot hoặc SolveInside chưa tắt');
         case 'full'
             w = varargin{1};
             p = varargin{2};
@@ -632,16 +674,15 @@ end
 function library = initializeLibrary(root)
 % Mục đích: khai báo tường minh thư mục/file và chặn helper ngoài bản đi kèm dự án.
 % Kiểm tra đủ file trước khi sửa path; không genpath, không nạp examples/tests/reference.
-apiRoot = fullfile(root, 'third_party', 'hfss-api');
-paths = struct('root', root, 'apiRoot', apiRoot, ...
-    'general', fullfile(apiRoot, 'general'), ...
-    'modeler3d', fullfile(apiRoot, '3dmodeler'), ...
-    'boundary', fullfile(apiRoot, 'boundary'), ...
-    'analysis', fullfile(apiRoot, 'analysis'), ...
-    'radiation', fullfile(apiRoot, 'radiation'), ...
-    'reporter', fullfile(apiRoot, 'reporter'), ...
-    'mesh', fullfile(apiRoot, 'mesh'), ...
-    'fieldsCalculator', fullfile(apiRoot, 'fieldsCalculator'), ...
+paths = struct('root', root, 'library', fullfile(root, 'third_party', 'hfss-api'), ...
+    'general', fullfile(root, 'third_party', 'hfss-api', 'general'), ...
+    'modeler3d', fullfile(root, 'third_party', 'hfss-api', '3dmodeler'), ...
+    'boundary', fullfile(root, 'third_party', 'hfss-api', 'boundary'), ...
+    'analysis', fullfile(root, 'third_party', 'hfss-api', 'analysis'), ...
+    'radiation', fullfile(root, 'third_party', 'hfss-api', 'radiation'), ...
+    'reporter', fullfile(root, 'third_party', 'hfss-api', 'reporter'), ...
+    'mesh', fullfile(root, 'third_party', 'hfss-api', 'mesh'), ...
+    'fieldsCalculator', fullfile(root, 'third_party', 'hfss-api', 'fieldsCalculator'), ...
     'customHelpers', fullfile(root, 'custom_helpers'));
 apiHelpers = { ...
     'hfssNewProject', paths.general; ...
@@ -693,20 +734,19 @@ if ~isfile(runtime)
     error('Vivaldi:LibraryFileMissing', ...
         'Thiếu hfssVivaldiChecks.vbs. Mong đợi: %s. MATLAB đang nhận: <đọc trực tiếp file, không tra bằng which>.', runtime);
 end
-% Phát hiện bản đang nhận nhầm trước addpath, không âm thầm che thư viện khác.
-for k = 1:size(helpers, 1)
-    actual = which(helpers{k, 1});
-    if ~isempty(actual), requireHelperPath(helpers{k, 1}, fullfile(helpers{k, 2}, [helpers{k, 1} '.m']), actual); end
-end
 originalPath = path;
 try
-    current = strsplit(path, pathsep);
-    for name = fieldnames(paths)'
-        folder = paths.(name{1});
-        if ~any(strcmp(current, folder))
-            addpath(folder, '-begin'); current{end + 1} = folder; %#ok<AGROW>
-        end
-    end
+    %% Nạp bản thư viện của dự án trước, không bắt người dùng reset path
+    addpath(root, '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'boundary'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', '3dmodeler'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'analysis'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'general'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'radiation'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'reporter'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'fieldsCalculator'), '-begin');
+    addpath(fullfile(root, 'third_party', 'hfss-api', 'mesh'), '-begin');
+    addpath(fullfile(root, 'custom_helpers'), '-begin');
     resolved = cell(size(helpers, 1), 2);
     for k = 1:size(helpers, 1)
         name = helpers{k, 1}; expected = fullfile(helpers{k, 2}, [name '.m']); actual = which(name);

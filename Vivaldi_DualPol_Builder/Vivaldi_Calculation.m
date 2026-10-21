@@ -8,6 +8,19 @@ switch action
         varargout{1} = vivaldiCalculateGeometry(varargin{1});
     case 'validate'
         [varargout{1:nargout}] = vivaldiValidateParams(varargin{1});
+    case 'material_defaults'
+        varargout{1} = defaultMaterials();
+    case 'material_validate'
+        varargout{1} = validateMaterial(varargin{1});
+    case 'material_body'
+        varargout{1} = bodyMaterial(varargin{1});
+    case 'material_load'
+        [varargout{1:nargout}] = loadMaterials(varargin{1});
+    case 'material_save'
+        varargout{1} = saveMaterial(varargin{1},varargin{2});
+    case 'material_filter'
+        database = varargin{1}; term = lower(strtrim(char(varargin{2})));
+        varargout{1} = find(cellfun(@(name)~isempty(strfind(lower(name),term)) || isempty(term), {database.name})); %#ok<STREMP>
     otherwise
         error('Vivaldi:Calculation', 'Thao tác tính toán không được hỗ trợ.');
 end
@@ -339,4 +352,107 @@ function [ok, errors, warnings, g] = vivaldiValidateParams(p)
     warnings{end + 1} = ['Kiểm tra đại số không chứng minh tiếp xúc CAD, topology hoặc hiệu năng RF. ' ...
                          'Chờ kiểm tra thực tế bằng HFSS.'];
     ok = isempty(errors);
+end
+
+function database = defaultMaterials()
+% Mục đích: giữ danh sách điện môi của mẫu và thông số kim loại đúng nguồn 17/10.
+spec = {'FR4_epoxy',4.4,.0200; 'Rogers RO4350 (tm)',3.48,.0037; ...
+    'Rogers RT/duroid 5880 (tm)',2.2,.0009; 'Arlon AD250',2.5,.0018; ...
+    'Taconic TLC-30',3,.0030; 'Teflon (PTFE)',2.1,.0002; 'Glass',5.5,0; 'Vacuum',1,0};
+database = repmat(materialRecord('', 'dielectric', 1, 0, 0, 1), 0, 1);
+for k = 1:size(spec,1)
+    database(end+1) = materialRecord(spec{k,1}, 'dielectric', spec{k,2}, spec{k,3}, 0, 1); %#ok<AGROW>
+end
+database(end+1) = materialRecord('Aluminum', 'metal', 1, 0, 38000000, 1.000021);
+database(end+1) = materialRecord('Copper', 'metal', 1, 0, 58000000, .999991);
+database(end+1) = materialRecord('PEC', 'pec', [], [], [], []);
+end
+
+function material = materialRecord(name, kind, epsilon, loss, conductivity, permeability)
+% Mục đích: một schema nhỏ dùng chung giữa GUI, dữ liệu MAT và Builder.
+material = struct('name', name, 'kind', kind, 'permittivity', epsilon, ...
+    'lossTangent', loss, 'conductivity', conductivity, 'permeability', permeability);
+end
+
+function material = validateMaterial(material)
+% Mục đích: kiểm tra dữ liệu vật liệu; PEC không giả lập bằng conductivity hữu hạn.
+fields = {'name','kind','permittivity','lossTangent','conductivity','permeability'};
+assert(isstruct(material) && isscalar(material) && isequal(sort(fieldnames(material)), sort(fields')), ...
+    'Vivaldi:Material', 'Vật liệu phải có đúng tên, loại và bốn thông số điện từ.');
+assert(ischar(material.name) && isrow(material.name), 'Vivaldi:Material', 'Tên vật liệu phải là chuỗi một dòng.');
+material.name = strtrim(material.name);
+assert(~isempty(material.name) && isempty(regexp(material.name, '[\x00-\x1F"\\:*?<>|,;]', 'once')), ...
+    'Vivaldi:Material', 'Tên vật liệu rỗng hoặc có ký tự không hợp lệ.');
+assert(ischar(material.kind) && ismember(material.kind, {'metal','dielectric','pec'}), ...
+    'Vivaldi:Material', 'Loại vật liệu không hợp lệ.');
+if strcmp(material.kind, 'pec')
+    assert(strcmpi(material.name,'PEC'), 'Vivaldi:Material', 'Vật dẫn lý tưởng dùng định nghĩa PEC tích hợp của HFSS.');
+    for k = 3:numel(fields)
+        assert(isnumeric(material.(fields{k})) && isempty(material.(fields{k})), ...
+            'Vivaldi:Material', 'PEC không khai báo thông số vật liệu hữu hạn giả tạo.');
+    end
+else
+    for k = 3:numel(fields)
+        value = material.(fields{k});
+        assert(isnumeric(value) && isscalar(value) && isreal(value) && isfinite(value), ...
+            'Vivaldi:Material', 'Thông số %s phải là số thực hữu hạn.', fields{k});
+    end
+    assert(material.permittivity>0 && material.permeability>0 && material.lossTangent>=0 && material.conductivity>=0, ...
+        'Vivaldi:Material', 'Cần epsilon/mu dương, loss tangent và conductivity không âm.');
+    if strcmp(material.kind,'metal')
+        assert(material.conductivity>0, 'Vivaldi:Material', 'Kim loại cần conductivity dương.');
+    end
+end
+material = materialRecord(material.name, material.kind, material.permittivity, material.lossTangent, material.conductivity, material.permeability);
+end
+
+function body = bodyMaterial(material)
+% Mục đích: điện môi trong thư viện không được áp sai lên thân anten kim loại.
+body = validateMaterial(material);
+assert(ismember(body.kind, {'metal','pec'}), 'Vivaldi:MaterialBody', ...
+    'Thân anten này chỉ nhận kim loại hoặc PEC. Thiết kế nguồn không có substrate điện môi để gán %s.', body.name);
+end
+
+function [database, message] = loadMaterials(file)
+% Mục đích: gộp mặc định và custom; cấu hình lỗi được báo, không bị xóa/ghi đè.
+database = defaultMaterials(); message = '';
+if ~isfile(file), return; end
+try
+    data = load(file, 'schemaVersion', 'customMaterials');
+    assert(isfield(data,'schemaVersion') && isequal(data.schemaVersion,1) && isfield(data,'customMaterials') && isstruct(data.customMaterials), ...
+        'Vivaldi:MaterialConfig', 'Schema file vật liệu không hợp lệ.');
+    for k = 1:numel(data.customMaterials)
+        candidate = validateMaterial(data.customMaterials(k));
+        assert(~any(strcmpi({database.name},candidate.name)), 'Vivaldi:MaterialDuplicate', 'Trùng tên vật liệu %s.', candidate.name);
+        database(end+1) = candidate; %#ok<AGROW>
+    end
+catch err
+    database = defaultMaterials();
+    message = sprintf('Không đọc được cấu hình vật liệu %s: %s. File được giữ nguyên; chưa cho ghi đè.',file,err.message);
+end
+end
+
+function database = saveMaterial(file, candidate)
+% Mục đích: thêm một vật liệu, lưu MAT riêng có backup; không đụng nguồn/reference.
+candidate = validateMaterial(candidate);
+[database, message] = loadMaterials(file);
+assert(isempty(message), 'Vivaldi:MaterialConfig', '%s', message);
+assert(~any(strcmpi({database.name},candidate.name)), 'Vivaldi:MaterialDuplicate', 'Vật liệu %s đã tồn tại, kể cả khác hoa/thường.',candidate.name);
+[folder,~,extension] = fileparts(file);
+assert(strcmpi(extension,'.mat') && ~isempty(folder), 'Vivaldi:MaterialConfig', 'Cấu hình phải là đường dẫn file MAT riêng.');
+if ~isfolder(folder), [ok,msg]=mkdir(folder); assert(ok,'Vivaldi:MaterialConfig','%s',msg); end
+count = numel(defaultMaterials()); database(end+1) = candidate;
+customMaterials = database(count+1:end); schemaVersion = 1; %#ok<NASGU>
+temporary = [tempname(folder) '.mat'];
+cleanup = onCleanup(@()removeMaterialTemp(temporary)); %#ok<NASGU>
+save(temporary, 'customMaterials', 'schemaVersion', '-v7');
+if isfile(file)
+    [ok,msg] = copyfile(file,[file '.bak'],'f'); assert(ok,'Vivaldi:MaterialConfig','Không sao lưu được: %s',msg);
+end
+[ok,msg] = movefile(temporary,file,'f'); assert(ok,'Vivaldi:MaterialConfig','Không lưu được: %s',msg);
+end
+
+function removeMaterialTemp(file)
+% Mục đích: dọn tệp tạm khi lưu lỗi, giữ nguyên file cấu hình cũ và bản backup.
+if isfile(file), delete(file); end
 end

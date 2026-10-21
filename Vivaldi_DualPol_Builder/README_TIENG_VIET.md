@@ -1,6 +1,6 @@
 # Vivaldi Dual-Pol — Dựng anten mới bằng hfss-api
 
-Mỗi lần bấm **Tạo anten HFSS**: kích thước MATLAB → công thức nguồn → project HFSS trống → dựng đầy đủ anten nhôm/coax hai phân cực → kiểm tra CAD/Validate → lưu AEDT mới. Không Live Update, Working Project, rollback hoặc copy AEDT nguồn. Không tạo project khi chỉ mở GUI.
+Mỗi lần bấm **Tạo anten HFSS**: kích thước MATLAB → công thức nguồn → project HFSS trống → dựng anten kim loại/coax hai phân cực với snapshot vật liệu đã chọn → kiểm tra CAD/Validate → lưu AEDT mới. Không Live Update, Working Project, rollback hoặc copy AEDT nguồn. Không tạo project khi chỉ mở GUI.
 
 ## Chạy
 
@@ -11,14 +11,14 @@ Vivaldi_GUI
 ```
 
 1. Nhập kích thước trong miền hợp lệ; công thức/preview tự tính, không gửi HFSS.
-2. Chọn thư mục xuất và `ansysedt.exe` trong tab Tạo anten HFSS.
+2. Chọn vật liệu thân qua **Thư viện** (mặc định Aluminum), rồi chọn thư mục xuất và `ansysedt.exe` trong tab Tạo anten HFSS.
 3. Bấm Tạo anten HFSS, theo dõi Nhật ký. Mỗi lần cấp tên mới như Vivaldi_DualPol_001.aedt, _002.aedt; không ghi đè.
 4. Sau khi HFSS xác nhận và lưu thành công, bấm Mở file HFSS vừa tạo hoặc Chạy mô phỏng. Solver không tự chạy trong build.
 
 ## Mã nguồn gọn
 
-- `Vivaldi_GUI.m`: năm tab tiếng Việt, sáu nút, callback lồng theo mẫu Standard_Vivaldi_GUI.
-- `Vivaldi_Calculation.m`: tham số/công thức/kiểm tra nguồn, không giới hạn preset.
+- `Vivaldi_GUI.m`: năm tab tiếng Việt, bảy nút, callback lồng theo mẫu Standard_Vivaldi_GUI.
+- `Vivaldi_Calculation.m`: tham số/công thức/kiểm tra nguồn và dữ liệu vật liệu, không giới hạn preset.
 - `Vivaldi_HFSS_Builder.m`: toàn bộ thứ tự CAD và helper đặc thù gộp trong file.
 - `Vivaldi_HFSS_Simulation.m`: port, setup, Discrete Sweep, solver và đọc CSV thực.
 - `custom_helpers/`: ghi/escape script, phép đo CAD VBS và preview; không có class/session COM.
@@ -43,9 +43,9 @@ Bản vá CHECK_02/03 tách truy vấn Sheets khỏi phép dựng mặt; xem m�
 
 Root được lấy từ `fileparts(mfilename('fullpath'))`, không phụ thuộc Current Folder. `Vivaldi_HFSS_Builder('initialize')` trả về các đường dẫn tuyệt đối và kết quả `which()` đã xác minh. GUI chạy khởi tạo trước khi tạo cửa sổ; lỗi thư viện ngăn tạo anten. Sinh script/chạy HFSS kiểm tra lại, còn timer `poll` không addpath.
 
-Chỉ nạp root ứng dụng, `custom_helpers`, `third_party/hfss-api` và tám thư mục con `general`, `3dmodeler`, `boundary`, `analysis`, `radiation`, `reporter`, `mesh`, `fieldsCalculator`. Không gọi `genpath` hoặc phụ thuộc `hfssIncludePaths` nữa. Hai thư mục mesh/fieldsCalculator vẫn được kiểm tra tồn tại dù chưa có helper trực tiếp được dùng từ đó.
+Chỉ nạp root ứng dụng, `custom_helpers` và tám thư mục con của `third_party/hfss-api`: `general`, `3dmodeler`, `boundary`, `analysis`, `radiation`, `reporter`, `mesh`, `fieldsCalculator`. Không gọi `genpath` hoặc phụ thuộc `hfssIncludePaths` nữa. Hai thư mục mesh/fieldsCalculator vẫn được kiểm tra tồn tại dù chưa có helper trực tiếp được dùng từ đó.
 
-Mọi thư mục/file phải qua `isfolder`/`isfile`; mỗi hàm phải được `which()` nhận đúng file trong bản dự án. Phát hiện bản ngoài dự án sẽ dừng với tên helper, đường dẫn mong đợi và đường dẫn đang nhận, không âm thầm che xung đột. Gỡ thư mục gây xung đột khỏi MATLAB path hoặc đổi Current Folder nếu nó chứa helper trùng tên, rồi mở GUI lại.
+Mọi thư mục/file phải qua `isfolder`/`isfile`; mỗi hàm phải được `which()` nhận đúng file trong bản dự án. Sau khi kiểm tra thư mục/file, các dòng `addpath(..., '-begin')` tường minh ưu tiên bản đi kèm dự án, rồi mới kiểm tra `which()`. Bản cũ trên MATLAB path được tự chuyển xuống sau bản dự án. Nếu vẫn nhận sai (ví dụ Current Folder chứa hàm trùng tên, vốn ưu tiên hơn path), chương trình dừng với tên helper, đường dẫn mong đợi và đang nhận; đổi Current Folder để tránh hàm trùng tên. Không tự reset hoặc lưu MATLAB path.
 
 | Hàm | Thư mục tính từ `Vivaldi_DualPol_Builder` | File chính xác |
 |---|---|---|
@@ -87,3 +87,14 @@ Có thể mở ứng dụng từ Current Folder khác bằng cách thêm riêng 
 addpath('D:\Vivaldi_Array_10_16_2026\Vivaldi_DualPol_Builder');
 Vivaldi_GUI
 ```
+
+
+## Thư viện vật liệu
+
+Tab Thông số anten có ô tên chỉ đọc và nút **Thư viện**. Cửa sổ riêng có tìm kiếm, bảng, Add Material..., OK và Cancel. Kim loại hiển thị conductivity/permeability trong chi tiết; PEC dùng vật dẫn lý tưởng tích hợp. Điện môi vẫn có trong thư viện nhưng không được áp lên thân kim loại hoặc tự tạo substrate mới.
+
+Vật liệu tự thêm lưu tại `fullfile(prefdir,'Vivaldi_DualPol_Builder','custom_materials.mat')`, có bản `.bak` khi lưu lần sau. Cấu hình hỏng được báo rõ và giữ nguyên. Mặc định mỗi lần mở ứng dụng là Aluminum; các vật liệu tùy chỉnh đã lưu vẫn còn trong bảng.
+
+Lần dựng tiếp theo chụp riêng vật liệu vào job, `job.json` và script, áp cho Vivaldi_1, Vivaldi_2, Box1, De; coax vẫn Copper. Script đọc lại tên vật liệu/SolveInside và các thuộc tính qua Material Manager, rồi mới cho lưu AEDT. Không chỉnh định nghĩa có sẵn khi thuộc tính không khớp. Các lời gọi vật liệu và GUI chưa được chạy trên HFSS/MATLAB thật tại Cloud.
+
+Xem [hướng dẫn vật liệu và thay đổi](docs/MATERIAL_GUIDE.md) để biết schema, đường dẫn, danh sách file và cách kiểm tra trên Windows.
