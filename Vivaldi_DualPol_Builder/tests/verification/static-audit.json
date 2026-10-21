@@ -1,0 +1,144 @@
+{
+  "status": "PASS",
+  "ownMainFiles": 4,
+  "ownHelperMATLABFiles": 2,
+  "upstreamFilesVerified": 89,
+  "mappedHFSSHelpers": 26,
+  "libraryPreflight": "PASS (static coverage)",
+  "protectedFilesSHA256": {
+    "17_10_2026_vivaldi.aedt": "631820b2c07f457fd22f5cdab2aeae15694788c869629935460b2cefda1ba619",
+    "Phan_tich_chi_tiet_Vivaldi_dual_pol_17_10_2026.md": "49c5cbc0bc445e9bad6df008d9487f987c5db99cee7aca567fed0b205ad6e912"
+  },
+  "generatedScripts": [
+    {
+      "file": "/tmp/vivaldi-material-release/scripts/oct-VDpOrS/build.vbs",
+      "bytes": 820584,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/scripts/oct-JjpBTe/build.vbs",
+      "bytes": 848321,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/scripts/oct-Qk51yN/build.vbs",
+      "bytes": 50831,
+      "maxPhysicalLine": 852,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/\u0110\u1ed3 \u00e1n Vivaldi/scripts/oct-aAgvjq/build.vbs",
+      "bytes": 829570,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/encoding.vbs",
+      "bytes": 30777,
+      "maxPhysicalLine": 755,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/simulate.vbs",
+      "bytes": 146198,
+      "maxPhysicalLine": 898,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/collision/scripts/oct-WZPOEq/build.vbs",
+      "bytes": 51374,
+      "maxPhysicalLine": 852,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-release/pec/scripts/oct-pkMGju/build.vbs",
+      "bytes": 818310,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    },
+    {
+      "file": "/tmp/vivaldi-material-final/scripts/oct-55scpW/build.vbs",
+      "bytes": 819988,
+      "maxPhysicalLine": 882,
+      "checks": [
+        "ASCII/no BOM/NUL",
+        "strings/parentheses",
+        "Sub/Function blocks",
+        "line/continuation limits",
+        "Unicode ChrW roundtrip"
+      ]
+    }
+  ],
+  "HFSSCheckpointStatus": {
+    "CHECK_01": "PENDING",
+    "CHECK_02": "PENDING",
+    "CHECK_03": "PENDING",
+    "CHECK_04": "PENDING",
+    "CHECK_05": "PENDING",
+    "CHECK_06": "PENDING",
+    "CHECK_07": "PENDING",
+    "CHECK_08": "PENDING",
+    "CHECK_09": "PENDING",
+    "CHECK_10": "PENDING",
+    "CHECK_11": "PENDING",
+    "CHECK_12": "PENDING",
+    "CHECK_13": "PENDING",
+    "CHECK_14": "PENDING",
+    "CHECK_15": "PENDING",
+    "CHECK_16": "PENDING",
+    "CHECK_17": "PENDING",
+    "CHECK_18": "PENDING"
+  },
+  "WindowsQueryFixtures": "PENDING",
+  "scope": "Static only; Windows compiler, GUI and HFSS remain PENDING."
+}

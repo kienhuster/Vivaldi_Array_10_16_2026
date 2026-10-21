@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "baselineCommit": "5f89b686ecca0c09a0fb810679ace3eb40859a40",
+  "checks": [
+    "Original parameter defaults, formula functions, transforms and geometry validation unchanged",
+    "Simulation module byte-identical",
+    "No new application MATLAB files"
+  ],
+  "geometryFunctionsSHA256": "77632290c9d47d1442137c094aa6d6727ab766e9c1f4f85166b0cd293dd1647e",
+  "scope": "Static source comparison only; HFSS geometry remains PENDING."
+}

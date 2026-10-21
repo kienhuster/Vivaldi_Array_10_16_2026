@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "timeUTC": "2026-10-21T03:47:08.777009+00:00",
+  "archive": "Vivaldi_DualPol_Builder.zip",
+  "payloadFilesVerified": 131,
+  "checks": [
+    "ZIP CRC",
+    "actual extraction",
+    "per-file SHA-256",
+    "required files/dependencies"
+  ],
+  "scope": "Payload manifest excludes itself and this verification report; final archive also rechecked after embedding report."
+}

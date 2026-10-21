@@ -21,6 +21,8 @@ __pycache__/
 # Live API runtime output (release verification reports remain tracked)
 /Vivaldi_DualPol_Live_API_FINAL/work/
 /Vivaldi_DualPol_Live_API_FINAL/logs/
+/Vivaldi_DualPol_Live_API_FINAL.zip
+/Vivaldi_DualPol_Live_API_FINAL_ZIP_INTEGRITY.json
 
 # Local credentials and operating-system files
 .env
@@ -30,3 +32,13 @@ __pycache__/
 *.key
 .DS_Store
 Thumbs.db
+
+# Build-only output and unique filename reservations
+/Vivaldi_DualPol_Builder/output/
+/Vivaldi_DualPol_Builder.zip
+/Vivaldi_DualPol_Builder_ZIP_INTEGRITY.json
+*.aedt.reserve/
+
+# User material preferences belong to prefdir, not source control
+custom_materials.mat
+custom_materials.mat.bak
